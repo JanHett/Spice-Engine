@@ -5,15 +5,39 @@
 
 #include "../src/prototype.h"
 
-TEST(Matrix, MatrixConstructor) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+TEST(Matrix, AccessAt) {
+	Matrix<int, 2, 2> m;
+	m.data[2] = 42;
+
+	// check if accessing works
+	EXPECT_EQ(0, m.at(0, 0));
+	EXPECT_EQ(0, m.at(0, 1));
+	EXPECT_EQ(42, m.at(1, 0));
+	EXPECT_EQ(0, m.at(1, 1));
+	
+	// check if assigning works
+	m.at(0,1) = 47;
+	EXPECT_EQ(47, m.at(0, 1));
+}
+
+TEST(Matrix, OperatorMultiply) {
+	Matrix<int, 2, 3> m;
+	Matrix<int, 3, 2> n;
+
+	Matrix result = m * n;
+	EXPECT_EQ(result.height, m.height);
+	EXPECT_EQ(result.width, n.width);
+}
+
+TEST(Tensor, TensorConstructor) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
 
 	EXPECT_EQ(27, m.data.size());
 }
 
-TEST(Matrix, OperatorAddEquals) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorAddEquals) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
@@ -28,16 +52,16 @@ TEST(Matrix, OperatorAddEquals) {
 	EXPECT_NE(m.data, n.data);
 }
 
-TEST(Matrix, OperatorAdd) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorAdd) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Matrix<float, 3> res = m + n;
+	Tensor<float, 3> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -46,8 +70,8 @@ TEST(Matrix, OperatorAdd) {
 	EXPECT_NE(m.data, res.data);
 }
 
-TEST(Matrix, OperatorScalarAddEquals) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorScalarAddEquals) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
 	unsigned int n = 42;
 
 	m.data[0] = 5;
@@ -57,13 +81,13 @@ TEST(Matrix, OperatorScalarAddEquals) {
 	EXPECT_EQ(47, m.data[0]);
 }
 
-TEST(Matrix, OperatorScalarAdd) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorScalarAdd) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
 	unsigned int n = 42;
 
 	m.data[0] = 5;
 
-	Matrix<float, 3> res = m + n;
+	Tensor<float, 3> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_EQ(47, res.data[0]);
@@ -71,9 +95,9 @@ TEST(Matrix, OperatorScalarAdd) {
 	EXPECT_NE(m.data, res.data);
 }
 
-TEST(Matrix, OperatorSubtractEquals) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorSubtractEquals) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 42;
 	n.data[0] = 2;
@@ -88,16 +112,16 @@ TEST(Matrix, OperatorSubtractEquals) {
 	EXPECT_NE(m.data, n.data);
 }
 
-TEST(Matrix, OperatorSubtract) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorSubtract) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 42;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Matrix<float, 3> res = m - n;
+	Tensor<float, 3> res = m - n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -106,9 +130,9 @@ TEST(Matrix, OperatorSubtract) {
 	EXPECT_NE(m.data, res.data);
 }
 
-TEST(Matrix, OperatorMultiplyEquals) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorMultiplyEquals) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
@@ -123,16 +147,16 @@ TEST(Matrix, OperatorMultiplyEquals) {
 	EXPECT_NE(m.data, n.data);
 }
 
-TEST(Matrix, OperatorMultiply) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorMultiply) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Matrix<float, 3> res = m * n;
+	Tensor<float, 3> res = m * n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -141,9 +165,9 @@ TEST(Matrix, OperatorMultiply) {
 	EXPECT_NE(m.data, res.data);
 }
 
-TEST(Matrix, OperatorDivideEquals) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorDivideEquals) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	for (int i = 0; i < n.data.size(); ++i) n.data[i] = 2;	// make sure we're not dividing by 0
@@ -158,16 +182,16 @@ TEST(Matrix, OperatorDivideEquals) {
 	EXPECT_NE(m.data, n.data);
 }
 
-TEST(Matrix, OperatorDivide) {
-	Matrix<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Matrix<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+TEST(Tensor, OperatorDivide) {
+	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	for (int i = 0; i < n.data.size(); ++i) n.data[i] = 2;	// make sure we're not dividing by 0
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Matrix<float, 3> res = m / n;
+	Tensor<float, 3> res = m / n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -176,9 +200,9 @@ TEST(Matrix, OperatorDivide) {
 	EXPECT_NE(m.data, res.data);
 }
 
-// TEST(Matrix, MatrixAddEqualsPerformance) {
-// 	Matrix<float, 2> m(std::array<const unsigned int, 2>{14204, 10652});
-// 	Matrix<float, 2> n(std::array<const unsigned int, 2>{14204, 10652});
+// TEST(Tensor, TensorAddEqualsPerformance) {
+// 	Tensor<float, 2> m(std::array<const unsigned int, 2>{14204, 10652});
+// 	Tensor<float, 2> n(std::array<const unsigned int, 2>{14204, 10652});
 
 // 	std::cout << "Randomising data of " << m.data.size() + n.data.size() << " values." << std::endl;
 // 	for (int i = 0; i < m.data.size(); ++i) {
