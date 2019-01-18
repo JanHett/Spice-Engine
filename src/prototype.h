@@ -23,16 +23,42 @@ public:
 
     }
 
-    T& at (const unsigned int x, const unsigned int y) {
-    	// TODO: bounds checking
-    	// static_assert(x * w + y <= w * h, "Cannot access coordinates outside Matrix.");
-    	return data[x * w + y];
+    /**
+     * Statically gets a reference to the element at the specified coordinates.
+     * Invoked as `T element = matrix.at<42, 47>();`
+     */
+    template <const unsigned int x, const unsigned int y>
+    constexpr const T& at () const {
+    	// bounds checking
+    	static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside Matrix.");
+    	return data[y * w + x];
     }
 
-    T at (const unsigned int x, const unsigned int y) const {
+    /**
+     * Statically gets a reference to the element at the specified coordinates.
+     * Invoked as `T element = matrix.at<42, 47>();`
+     */
+    template <const unsigned int x, const unsigned int y>
+    constexpr T& at () {
+    	// bounds checking
+    	static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside Matrix.");
+    	return data[y * w + x];
+    }
+
+    /**
+     * Gets a const reference to an element at specified coordinates.
+     */
+    const T& at (const unsigned int x, const unsigned int y) const {
     	// TODO: bounds checking
-    	// static_assert(x * w + y <= w * h, "Cannot access coordinates outside Matrix.");
-    	return data[x * w + y];
+    	return data[y * w + x];
+    }
+
+	/**
+     * Gets a reference to an element at specified coordinates.
+     */
+    T& at (const unsigned int x, const unsigned int y) {
+    	// TODO: bounds checking
+    	return data[y * w + x];
     }
 
     /**
@@ -64,7 +90,6 @@ public:
     	typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type
 	>
     Matrix& operator+= (const N& rhs) {
-    	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] += rhs;
 		}
@@ -110,8 +135,8 @@ public:
 	 * TODO: check if this can be optimised.
 	 */
 	template<
-		unsigned int lhs_height, unsigned int lhs_width,
-		unsigned int rhs_height, unsigned int rhs_width
+		unsigned int lhs_width, unsigned int lhs_height,
+		unsigned int rhs_width, unsigned int rhs_height
 	>
 	friend Matrix<T, rhs_width, lhs_height> operator* (
 		const Matrix<T, lhs_width, lhs_height>& lhs, const Matrix<T, rhs_width, rhs_height>& rhs
@@ -120,16 +145,25 @@ public:
 
     	Matrix<T, rhs_width, lhs_height> result;
 
-    	for (unsigned int x = 0; x < rhs_width; ++x) {
-    		for (unsigned int y = 0; y < lhs_height; ++y) {
+		for (unsigned int y = 0; y < lhs_height; ++y) {
+	    	for (unsigned int x = 0; x < rhs_width; ++x) {
     			T entry;
     			for (unsigned int i = 0; i < lhs_width; ++i) {
-    				entry += lhs.at(y, i) * rhs.at(i, x);
+    				entry += lhs.at(x, i) * rhs.at(i, y);
     			}
     			result.at(x, y) = entry;
     		}
     	}
 		return result;
+	}
+
+	void print() const {
+		for (unsigned int y = 0; y < h; ++y) {
+			for (unsigned int x = 0; x < w; ++x) {
+				std::cout << at(x, y) << " ";
+			}
+			std::cout << std::endl;
+		}
 	}
 };
 
