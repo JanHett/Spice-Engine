@@ -6,16 +6,21 @@
 
 using namespace std;
 
+/**
+ * Generic matrix class.
+ * This class assumes that `T` is a number-like type providing the mathematical operators +, -, * and /.
+ * Empty value initialisation of T should initialise it with a 'zero value'.
+ */
 template <class T, unsigned int w = 1, unsigned int h = 1>
 class Matrix {
 public:
-    std::vector<T> data;
+    std::array<T, w * h> data;
 
     const unsigned int width = w;
     const unsigned int height = h;
 
     Matrix():
-	data(std::vector<T>(w * h))
+	data(std::array<T, w * h>())
     {
     }
 
@@ -145,13 +150,18 @@ public:
 
     	Matrix<T, rhs_width, lhs_height> result;
 
-		for (unsigned int y = 0; y < lhs_height; ++y) {
-	    	for (unsigned int x = 0; x < rhs_width; ++x) {
-    			T entry;
+    	// TODO: optimise cache locality of this
+
+		// step through all the lines of the lhs...
+		for (unsigned int line = 0; line < lhs_height; ++line) {
+			// and for each, go through all the columns of the rhs
+	    	for (unsigned int column = 0; column < rhs_width; ++column) {
+    			T entry{}; // value-initialising type here to start off with something neutral
+    			// go through each entry in their common dimension (lhs_widht == rhs_height) in other dimension that's currently being operated on
     			for (unsigned int i = 0; i < lhs_width; ++i) {
-    				entry += lhs.at(x, i) * rhs.at(i, y);
+    				entry += lhs.at(i, line) * rhs.at(column, i);
     			}
-    			result.at(x, y) = entry;
+    			result.at(column, line) = entry;
     		}
     	}
 		return result;

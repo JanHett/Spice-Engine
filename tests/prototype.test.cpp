@@ -166,7 +166,6 @@ TEST(Matrix, OperatorMultiply) {
 	m.at<1, 0>() = 47;
 	m.at<1, 1>() = 42;
 	m.at<1, 2>() = 47;
-	m.print();
 
 	Matrix<int, 3, 2> n;
 	n.at<0, 0>() = 47;
@@ -175,18 +174,20 @@ TEST(Matrix, OperatorMultiply) {
 	n.at<1, 1>() = 42;
 	n.at<2, 0>() = 47;
 	n.at<2, 1>() = 42;
-	n.print();
 
-	const Matrix result = n * m ;
+	const Matrix result = m * n;
 	EXPECT_EQ(result.height, m.height);
 	EXPECT_EQ(result.width, n.width);
 
-	result.print();
-
-	EXPECT_EQ(6157, (result.at<0, 0>()));
-	EXPECT_EQ(5502, (result.at<0, 1>()));
-	EXPECT_EQ(6392, (result.at<1, 0>()));
-	EXPECT_EQ(5712, (result.at<1, 1>()));
+	EXPECT_EQ(3948, (result.at<0, 0>()));
+	EXPECT_EQ(3973, (result.at<0, 1>()));
+	EXPECT_EQ(3948, (result.at<0, 2>()));
+	EXPECT_EQ(3948, (result.at<1, 0>()));
+	EXPECT_EQ(3973, (result.at<1, 1>()));
+	EXPECT_EQ(3948, (result.at<1, 2>()));
+	EXPECT_EQ(3948, (result.at<2, 0>()));
+	EXPECT_EQ(3973, (result.at<2, 1>()));
+	EXPECT_EQ(3948, (result.at<2, 2>()));
 }
 
 // ------------------
