@@ -2,14 +2,30 @@
 #include <iostream>
 #include <array>
 #include <cstdlib>
+#include <type_traits>
 
 #include "../../src/containers/pixel.h"
 
 TEST(Pixel, OperatorSubscriptConst) {
 	Pixel<3> pxl({0.5, 0.25, 0.125});
-	EXPECT_EQ(0.5, pxl[0]);
-	EXPECT_EQ(0.25, pxl[1]);
-	EXPECT_EQ(0.125, pxl[2]);
+	const auto pxl0 = pxl[0];
+	static_assert(
+		std::is_const<std::remove_reference<decltype(pxl0)>::type>::value,
+		"Not using const version of [] in test for const []."
+	);
+	const auto pxl1 = pxl[1];
+	static_assert(
+		std::is_const<std::remove_reference<decltype(pxl1)>::type>::value,
+		"Not using const version of [] in test for const []."
+	);
+	const auto pxl2 = pxl[2];
+	static_assert(
+		std::is_const<std::remove_reference<decltype(pxl2)>::type>::value,
+		"Not using const version of [] in test for const []."
+	);
+	EXPECT_EQ(0.5, pxl0);
+	EXPECT_EQ(0.25, pxl1);
+	EXPECT_EQ(0.125, pxl2);
 }
 
 TEST(Pixel, OperatorSubscript) {
