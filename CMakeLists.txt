@@ -11,18 +11,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(GTEST_ROOT "/usr/local/include/gtest" CACHE PATH "Path to googletest")
 find_package(GTest REQUIRED)
 
+# Main executable config
 file(GLOB SRC
-    src/*.h
-    src/*.cpp
+    src/**/*.h
+    src/**/*.hpp
+    src/**/*.cpp
 )
-
-file(GLOB TESTS
-    tests/*.h
-    tests/*.cpp
-)
-
 add_executable(${PROJECT_NAME} "src/main.cpp" ${SRC})
 
+# Test executable config
+file(GLOB TESTS
+    tests/*.cpp
+    tests/**/*.cpp
+)
 add_executable(tests ${TESTS})
 target_link_libraries(tests GTest::GTest)
 gtest_discover_tests(tests)
