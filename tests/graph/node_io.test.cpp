@@ -15,9 +15,9 @@ TEST(Input, _Connect) {
     i->_connect(o);
 
     // input's source address should equal output's address
-    EXPECT_EQ(o.get(), i->source.lock().get());
+    EXPECT_EQ(o, i->source.lock());
     // both input and output should reference the same address with their data property
-    EXPECT_EQ(o->data.get(), i->data.lock().get());
+    EXPECT_EQ(o->data, i->data.lock());
 }
 
 TEST(Input, Connect) {
@@ -27,13 +27,13 @@ TEST(Input, Connect) {
     i->connect(o);
 
     // input's source address should equal output's address
-    EXPECT_EQ(o.get(), i->source.lock().get());
+    EXPECT_EQ(o, i->source.lock());
     // output should have exactly one consumer
     EXPECT_EQ(1, o->consumers.size());
     // input's address should be referred to by output's first entry into consumers vector
-    EXPECT_EQ(i.get(), o->consumers[0].lock().get());
+    EXPECT_EQ(i, o->consumers[0].lock());
     // both input and output should reference the same address with their data property
-    EXPECT_EQ(o->data.get(), i->data.lock().get());
+    EXPECT_EQ(o->data, i->data.lock());
 }
 
 TEST(Input, _Disconnect) {
@@ -48,7 +48,7 @@ TEST(Input, _Disconnect) {
     // output should still have exactly one consumer
     EXPECT_EQ(1, o->consumers.size());
     // input's address should still be referred to by output's first entry into consumers vector
-    EXPECT_EQ(i.get(), o->consumers[0].lock().get());
+    EXPECT_EQ(i, o->consumers[0].lock());
     // input should not hold a reference to data anymore
     EXPECT_EQ(nullptr, i->data.lock());
 }
@@ -81,7 +81,7 @@ TEST(Output, _Connect) {
     // output should have exactly one consumer
     EXPECT_EQ(1, o->consumers.size());
     // input's address should be referred to by output's first entry into consumers vector
-    EXPECT_EQ(i.get(), o->consumers[0].lock().get());
+    EXPECT_EQ(i, o->consumers[0].lock());
 }
 
 TEST(Output, Connect) {
@@ -91,13 +91,13 @@ TEST(Output, Connect) {
     o->connect(i);
 
     // input's source address should equal output's address
-    EXPECT_EQ(o.get(), i->source.lock().get());
+    EXPECT_EQ(o, i->source.lock());
     // output should have exactly one consumer
     EXPECT_EQ(1, o->consumers.size());
     // input's address should be referred to by output's first entry into consumers vector
-    EXPECT_EQ(i.get(), o->consumers[0].lock().get());
+    EXPECT_EQ(i, o->consumers[0].lock());
     // both input and output should reference the same address with their data property
-    EXPECT_EQ(o->data.get(), i->data.lock().get());
+    EXPECT_EQ(o->data, i->data.lock());
 }
 
 TEST(Output, _Disconnect) {
@@ -108,11 +108,11 @@ TEST(Output, _Disconnect) {
     o->_disconnect(i);
 
     // input's source address should still equal output's address
-    EXPECT_EQ(o.get(), i->source.lock().get());
+    EXPECT_EQ(o, i->source.lock());
     // output should now have zero consumers
     EXPECT_EQ(0, o->consumers.size());
     // both input and output should still reference the same address with their data property
-    EXPECT_EQ(o->data.get(), i->data.lock().get());
+    EXPECT_EQ(o->data, i->data.lock());
 }
 
 TEST(Output, Disconnect) {
