@@ -20,11 +20,11 @@ public:
 
     Node(const std::string id): id(id) {}
 
-    const std::vector<Input<T>>& get_inputs() const {
+    std::vector<Input<T>> const & get_inputs() const {
         return inputs;
     }
 
-    const std::vector<Input<T>>& get_outputs() const {
+    std::vector<Output<T>> const & get_outputs() const {
         return outputs;
     }
 
@@ -35,20 +35,27 @@ public:
 };
 
 class Loader: public Node<Matrix<Pixel<4>>> {
+private:
+	std::shared_ptr<Matrix<Pixel<4>>> data;
 public:
     Loader(const std::string id): Node(id) {
+    	// no actual data yet, but we need an empty pointer to point the output to
+        data = std::make_shared<Matrix<Pixel<4>>>();
         outputs.push_back(Output<Matrix<Pixel<4>>>("Image"));
+        outputs[0].data = data;
     }
     
     Loader(const std::string id, const std::string path): Node(id) {
-        outputs.push_back(Output<Matrix<Pixel<4>>>("Image"));
         open(path);
+        outputs.push_back(Output<Matrix<Pixel<4>>>("Image"));
+        outputs[0].data = data;
     }
 
     /**
      * Sets the source path and loads the file as an image.
      */
     bool open(const std::string path) {
+    	data = std::make_shared<Matrix<Pixel<4>>>();
         return false;
     }
 

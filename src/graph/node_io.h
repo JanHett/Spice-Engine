@@ -33,7 +33,7 @@ private:
 public:
     std::string label;
     // TODO: make these private
-    std::weak_ptr<T> data;
+    std::weak_ptr<T> data; // this is undefined after construction
     std::weak_ptr<Output<T>> source;
 
     Input() = default;
@@ -88,7 +88,7 @@ private:
 public:
     std::string label;
     // TODO: make these private
-    std::shared_ptr<T> data;
+    std::shared_ptr<T> data; // this is undefined after construction
     std::vector<std::weak_ptr<Input<T>>> consumers;
 
     Output() = default;

@@ -29,6 +29,10 @@ enum class CMYKChannel {
 template <unsigned int num_channels>
 class Pixel {
 public:
+    Pixel():
+    data{}
+    {}
+
     Pixel(std::array<float, num_channels> initial_data):
     data{initial_data}
     {}

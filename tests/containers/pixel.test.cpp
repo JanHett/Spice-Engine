@@ -6,6 +6,20 @@
 
 #include "../../src/containers/pixel.h"
 
+TEST(Pixel, ConstructorEmpty) {
+	Pixel<3> pxl;
+	EXPECT_EQ(0.0f, pxl[0]);
+	EXPECT_EQ(0.0f, pxl[1]);
+	EXPECT_EQ(0.0f, pxl[2]);
+}
+
+TEST(Pixel, ConstructorInitialValues) {
+	Pixel<3> pxl({0.2, 0.3, 0.4});
+	EXPECT_EQ(0.2f, pxl[0]);
+	EXPECT_EQ(0.3f, pxl[1]);
+	EXPECT_EQ(0.4f, pxl[2]);
+}
+
 TEST(Pixel, OperatorSubscriptConst) {
 	Pixel<3> pxl({0.5, 0.25, 0.125});
 	const auto pxl0 = pxl[0];

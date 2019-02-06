@@ -5,6 +5,25 @@
 
 #include "../../src/containers/matrix.h"
 
+TEST(Matrix, ConstructorEmpty) {
+	Matrix<float> m;
+	EXPECT_EQ(1, m.width);
+	EXPECT_EQ(1, m.height);
+	EXPECT_EQ(0, (m.at<0, 0>()));
+}
+
+TEST(Matrix, ConstructorDimensions) {
+	Matrix<float> m(2, 3);
+	EXPECT_EQ(2, m.width);
+	EXPECT_EQ(3, m.height);
+	EXPECT_EQ(0, (m.at<0, 0>()));
+	EXPECT_EQ(0, (m.at<1, 0>()));
+	EXPECT_EQ(0, (m.at<0, 1>()));
+	EXPECT_EQ(0, (m.at<1, 1>()));
+	EXPECT_EQ(0, (m.at<0, 2>()));
+	EXPECT_EQ(0, (m.at<1, 2>()));
+}
+
 TEST(Matrix, StaticConstAt) {
 	Matrix<int> _m(2, 2);
 	_m.data[1] = 42;
