@@ -3,14 +3,14 @@
 
 #include <array>
 
-enum class RGBChannel {
+enum class rgb_channel {
     red,
     green,
     blue,
     alpha
 };
 
-enum class CMYKChannel {
+enum class cmyk_channel {
     cyan,
     magenta,
     yellow,
@@ -24,16 +24,16 @@ enum class CMYKChannel {
  * for RGB pixels:  [ red, green, blue, alpha, ...arbitrary channels ],
  * for CMYK pixels: [ cyan, magenta, yellow, black, alpha, ...arbitrary channels ]
  *
- * The enums RGBChannel and CMYKChannel are provided for convenience to access a particular channel.
+ * The enums rgb_channel and cmyk_channel are provided for convenience to access a particular channel.
  */
 template <unsigned int num_channels>
-class Pixel {
+class pixel {
 public:
-    Pixel():
+    pixel():
     data{}
     {}
 
-    Pixel(std::array<float, num_channels> initial_data):
+    pixel(std::array<float, num_channels> initial_data):
     data{initial_data}
     {}
 
@@ -41,55 +41,55 @@ public:
 
     float& operator[](std::size_t idx)                  { return data[idx]; }
     const float& operator[](std::size_t idx) const      { return data[idx]; }
-    float& operator[](RGBChannel channel)               { return data[static_cast<int>(channel)]; }
-    const float& operator[](RGBChannel channel) const   { return data[static_cast<int>(channel)]; }
-    float& operator[](CMYKChannel channel)              { return data[static_cast<int>(channel)]; }
-    const float& operator[](CMYKChannel channel) const  { return data[static_cast<int>(channel)]; }
+    float& operator[](rgb_channel channel)               { return data[static_cast<int>(channel)]; }
+    const float& operator[](rgb_channel channel) const   { return data[static_cast<int>(channel)]; }
+    float& operator[](cmyk_channel channel)              { return data[static_cast<int>(channel)]; }
+    const float& operator[](cmyk_channel channel) const  { return data[static_cast<int>(channel)]; }
 
-    Pixel<num_channels>& operator+=(const Pixel<num_channels>& rhs) {
+    pixel<num_channels>& operator+=(const pixel<num_channels>& rhs) {
         for (unsigned int i = 0; i < data.size(); ++i) {
             data[i] += rhs.data[i];
         }
         return *this;
     }
 
-    friend Pixel operator+(Pixel lhs, const Pixel& rhs) {
+    friend pixel operator+(pixel lhs, const pixel& rhs) {
         lhs += rhs;
         return lhs;
     }
 
-    Pixel<num_channels>& operator-=(const Pixel<num_channels>& rhs) {
+    pixel<num_channels>& operator-=(const pixel<num_channels>& rhs) {
         for (unsigned int i = 0; i < data.size(); ++i) {
             data[i] -= rhs.data[i];
         }
         return *this;
     }
 
-    friend Pixel operator-(Pixel lhs, const Pixel& rhs) {
+    friend pixel operator-(pixel lhs, const pixel& rhs) {
         lhs -= rhs;
         return lhs;
     }
 
-    Pixel<num_channels>& operator*=(const Pixel<num_channels>& rhs) {
+    pixel<num_channels>& operator*=(const pixel<num_channels>& rhs) {
         for (unsigned int i = 0; i < data.size(); ++i) {
             data[i] *= rhs.data[i];
         }
         return *this;
     }
 
-    friend Pixel operator*(Pixel lhs, const Pixel& rhs) {
+    friend pixel operator*(pixel lhs, const pixel& rhs) {
         lhs *= rhs;
         return lhs;
     }
 
-    Pixel<num_channels>& operator/=(const Pixel<num_channels>& rhs) {
+    pixel<num_channels>& operator/=(const pixel<num_channels>& rhs) {
         for (unsigned int i = 0; i < data.size(); ++i) {
             data[i] /= rhs.data[i];
         }
         return *this;
     }
 
-    friend Pixel operator/(Pixel lhs, const Pixel& rhs) {
+    friend pixel operator/(pixel lhs, const pixel& rhs) {
         lhs /= rhs;
         return lhs;
     }

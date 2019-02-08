@@ -4,7 +4,7 @@
 #include <type_traits>
 
 template <class T, unsigned int num_dims = 1>
-class Tensor {
+class tensor {
 public:
 	/**
 	 * Contains the size of each of the dimensions.
@@ -17,7 +17,7 @@ public:
     
     std::vector<T> data;
 
-    Tensor(const std::array<const unsigned int, num_dims>&& dimensions):
+    tensor(const std::array<const unsigned int, num_dims>&& dimensions):
     dimensions(dimensions)
     {
     	unsigned int size = 1;
@@ -25,7 +25,7 @@ public:
     	data = std::vector<T>(size);
     }
 
-    ~Tensor() {
+    ~tensor() {
 
     }
 
@@ -33,7 +33,7 @@ public:
 	 * Adds a matrix to another.
 	 * For now, adding matrices of differing sizes is undefined behavior.
 	 */
-    Tensor& operator+= (const Tensor<T, num_dims>& rhs) {
+    tensor& operator+= (const tensor<T, num_dims>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] += rhs.data[i];
@@ -45,7 +45,7 @@ public:
 	 * Adds two matrices together.
 	 * For now, adding matrices of differing sizes is undefined behavior.
 	 */
-	friend Tensor operator+ (Tensor lhs, const Tensor& rhs) {
+	friend tensor operator+ (tensor lhs, const tensor& rhs) {
 		lhs += rhs;
 		return lhs;
 	}
@@ -57,7 +57,7 @@ public:
     	typename N,
     	typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type
 	>
-    Tensor& operator+= (const N& rhs) {
+    tensor& operator+= (const N& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] += rhs;
@@ -73,7 +73,7 @@ public:
     	typename N,
     	typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type
 	>
-	friend Tensor operator+ (Tensor lhs, const N& rhs) {
+	friend tensor operator+ (tensor lhs, const N& rhs) {
 		lhs += rhs;
 		return lhs;
 	}
@@ -82,7 +82,7 @@ public:
 	 * Subtracts a matrix from another.
 	 * For now, subtracting matrices of differing sizes is undefined behavior.
 	 */
-    Tensor& operator-= (const Tensor<T, num_dims>& rhs) {
+    tensor& operator-= (const tensor<T, num_dims>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] -= rhs.data[i];
@@ -94,7 +94,7 @@ public:
 	 * Subtracts two matrices from one another.
 	 * For now, subtracting matrices of differing sizes is undefined behavior.
 	 */
-	friend Tensor operator- (Tensor lhs, const Tensor& rhs) {
+	friend tensor operator- (tensor lhs, const tensor& rhs) {
 		lhs -= rhs;
 		return lhs;
 	}
@@ -104,7 +104,7 @@ public:
 	 * Multiplies a matrix with another.
 	 * For now, multiplying matrices of differing sizes is undefined behavior.
 	 */
-    Tensor& operator*= (const Tensor<T, num_dims>& rhs) {
+    tensor& operator*= (const tensor<T, num_dims>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] *= rhs.data[i];
@@ -116,7 +116,7 @@ public:
 	 * Multiplies two matrices together.
 	 * For now, multiplying matrices of differing sizes is undefined behavior.
 	 */
-	friend Tensor operator* (Tensor lhs, const Tensor& rhs) {
+	friend tensor operator* (tensor lhs, const tensor& rhs) {
 		lhs *= rhs;
 		return lhs;
 	}
@@ -125,7 +125,7 @@ public:
 	 * Divides a matrix by another.
 	 * For now, dividing matrices of differing sizes as well as dividing by matrices containing 0 is undefined behavior.
 	 */
-    Tensor& operator/= (const Tensor<T, num_dims>& rhs) {
+    tensor& operator/= (const tensor<T, num_dims>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] /= rhs.data[i];
@@ -137,7 +137,7 @@ public:
 	 * Divides one matrix by another.
 	 * For now, dividing matrices of differing sizes as well as dividing by matrices containing 0 is undefined behavior.
 	 */
-	friend Tensor operator/ (Tensor lhs, const Tensor& rhs) {
+	friend tensor operator/ (tensor lhs, const tensor& rhs) {
 		lhs /= rhs;
 		return lhs;
 	}
@@ -145,7 +145,7 @@ public:
 	unsigned int indexAt(const std::vector<unsigned int> &coordinates) const {
 		unsigned int idx = 0;
 		for (unsigned int i = 0; i < coordinates.size(); ++i) {
-			// increment index by coordinate (aka line/colomn number) multiplied by the size of the Tensor in that dimension
+			// increment index by coordinate (aka line/colomn number) multiplied by the size of the tensor in that dimension
 			idx += coordinates[i] * dimensions[i];
 		}
 		return idx;

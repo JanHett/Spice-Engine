@@ -6,14 +6,14 @@
 #include "../../src/containers/tensor.h"
 
 TEST(Tensor, TensorConstructor) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
 
 	EXPECT_EQ(27, m.data.size());
 }
 
 TEST(Tensor, OperatorAddEquals) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
@@ -29,15 +29,15 @@ TEST(Tensor, OperatorAddEquals) {
 }
 
 TEST(Tensor, OperatorAdd) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Tensor<float, 3> res = m + n;
+	tensor<float, 3> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -47,7 +47,7 @@ TEST(Tensor, OperatorAdd) {
 }
 
 TEST(Tensor, OperatorScalarAddEquals) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
 	unsigned int n = 42;
 
 	m.data[0] = 5;
@@ -58,12 +58,12 @@ TEST(Tensor, OperatorScalarAddEquals) {
 }
 
 TEST(Tensor, OperatorScalarAdd) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
 	unsigned int n = 42;
 
 	m.data[0] = 5;
 
-	Tensor<float, 3> res = m + n;
+	tensor<float, 3> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_EQ(47, res.data[0]);
@@ -72,8 +72,8 @@ TEST(Tensor, OperatorScalarAdd) {
 }
 
 TEST(Tensor, OperatorSubtractEquals) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 42;
 	n.data[0] = 2;
@@ -89,15 +89,15 @@ TEST(Tensor, OperatorSubtractEquals) {
 }
 
 TEST(Tensor, OperatorSubtract) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 42;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Tensor<float, 3> res = m - n;
+	tensor<float, 3> res = m - n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -107,8 +107,8 @@ TEST(Tensor, OperatorSubtract) {
 }
 
 TEST(Tensor, OperatorMultiplyEquals) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
@@ -124,15 +124,15 @@ TEST(Tensor, OperatorMultiplyEquals) {
 }
 
 TEST(Tensor, OperatorMultiply) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Tensor<float, 3> res = m * n;
+	tensor<float, 3> res = m * n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -142,11 +142,11 @@ TEST(Tensor, OperatorMultiply) {
 }
 
 TEST(Tensor, OperatorDivideEquals) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
-	for (int i = 0; i < n.data.size(); ++i) n.data[i] = 2;	// make sure we're not dividing by 0
+	for (size_t i = 0; i < n.data.size(); ++i) n.data[i] = 2;	// make sure we're not dividing by 0
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
@@ -159,15 +159,15 @@ TEST(Tensor, OperatorDivideEquals) {
 }
 
 TEST(Tensor, OperatorDivide) {
-	Tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
-	Tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> m(std::array<const unsigned int, 3>{3,3,3});
+	tensor<float, 3> n(std::array<const unsigned int, 3>{3,3,3});
 
 	m.data[0] = 4;
-	for (int i = 0; i < n.data.size(); ++i) n.data[i] = 2;	// make sure we're not dividing by 0
+	for (size_t i = 0; i < n.data.size(); ++i) n.data[i] = 2;	// make sure we're not dividing by 0
 
 	EXPECT_EQ(m.dimensions, n.dimensions);
 
-	Tensor<float, 3> res = m / n;
+	tensor<float, 3> res = m / n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);

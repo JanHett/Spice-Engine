@@ -27,3 +27,11 @@ file(GLOB TESTS
 add_executable(tests ${TESTS})
 target_link_libraries(tests GTest::GTest)
 gtest_discover_tests(tests)
+
+if(MSVC)
+  add_compile_options(/W4 /WX)
+else(MSVC)
+  # add_compile_options(-Wall -Wextra -pedantic -Werror)
+  add_compile_options(-Wall -Wextra -pedantic)
+  target_compile_options(tests PRIVATE -g -o0)
+endif(MSVC)

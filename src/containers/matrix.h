@@ -10,21 +10,21 @@
  * Empty value initialisation T{} should initialise the type with a 'zero value'.
  */
 template <class T>
-class Matrix {
+class matrix {
 public:
     std::vector<T> data;
 
     const unsigned int width;
     const unsigned int height;
 
-    Matrix(unsigned int w = 1, unsigned int h = 1):
+    matrix(unsigned int w = 1, unsigned int h = 1):
 	data(std::vector<T>(w * h)),
 	width(w),
 	height(h)
     {
     }
 
-    ~Matrix() {
+    ~matrix() {
 
     }
 
@@ -35,7 +35,7 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr const T& at () const {
     	// bounds checking
-    	// static_assert(y * width + x + 1 <= width * height, "Cannot access coordinates outside Matrix.");
+    	// static_assert(y * width + x + 1 <= width * height, "Cannot access coordinates outside matrix.");
     	return data[y * width + x];
     }
 
@@ -46,7 +46,7 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr T& at () {
     	// bounds checking
-    	// static_assert(y * width + x + 1 <= width * height, "Cannot access coordinates outside Matrix.");
+    	// static_assert(y * width + x + 1 <= width * height, "Cannot access coordinates outside matrix.");
     	return data[y * width + x];
     }
 
@@ -70,7 +70,7 @@ public:
 	 * Adds a matrix to another.
 	 * For now, adding matrices off differing sizes is undefined behavior/unsupported.
 	 */
-    Matrix& operator+= (const Matrix<T>& rhs) {
+    matrix& operator+= (const matrix<T>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] += rhs.data[i];
@@ -82,7 +82,7 @@ public:
 	 * Adds two matrices together.
 	 * For now, adding matrices of differing sizes is undefined behavior/unsupported.
 	 */
-	friend Matrix operator+ (Matrix<T> lhs, const Matrix<T>& rhs) {
+	friend matrix operator+ (matrix<T> lhs, const matrix<T>& rhs) {
 		lhs += rhs;
 		return lhs;
 	}
@@ -94,7 +94,7 @@ public:
     	typename N,
     	typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type
 	>
-    Matrix& operator+= (const N& rhs) {
+    matrix& operator+= (const N& rhs) {
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] += rhs;
 		}
@@ -109,7 +109,7 @@ public:
     	typename N,
     	typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type
 	>
-	friend Matrix operator+ (Matrix<T> lhs, const N& rhs) {
+	friend matrix operator+ (matrix<T> lhs, const N& rhs) {
 		lhs += rhs;
 		return lhs;
 	}
@@ -118,7 +118,7 @@ public:
 	 * Subtracts a matrix from another.
 	 * For now, subtracting matrices of differing sizes is undefined behavior/unsupported.
 	 */
-    Matrix& operator-= (const Matrix<T>& rhs) {
+    matrix& operator-= (const matrix<T>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] -= rhs.data[i];
@@ -130,7 +130,7 @@ public:
 	 * Subtracts two matrices from one another.
 	 * For now, subtracting matrices of differing sizes is undefined behavior/unsupported.
 	 */
-	friend Matrix operator- (Matrix<T> lhs, const Matrix<T>& rhs) {
+	friend matrix operator- (matrix<T> lhs, const matrix<T>& rhs) {
 		lhs -= rhs;
 		return lhs;
 	}
@@ -139,12 +139,12 @@ public:
 	 * Multiplies two matrices together.
 	 * TODO: check if this can be optimised.
 	 */
-	friend Matrix<T> operator* (
-		const Matrix<T>& lhs, const Matrix<T>& rhs
+	friend matrix<T> operator* (
+		const matrix<T>& lhs, const matrix<T>& rhs
 	) {
-    	// static_assert(rhs.height == lhs.width, "Righthand side Matrix height must equal lefthand side Matrix width.");
+    	// static_assert(rhs.height == lhs.width, "Righthand side matrix height must equal lefthand side matrix width.");
 
-    	Matrix<T> result(rhs.width, lhs.height);
+    	matrix<T> result(rhs.width, lhs.height);
 
     	// TODO: optimise cache locality of this
 
@@ -179,19 +179,19 @@ public:
  * Empty value initialisation T{} should initialise the type with a 'zero value'.
  */
 template <class T, unsigned int w = 1, unsigned int h = 1>
-class StaticMatrix {
+class static_matrix {
 public:
     std::array<T, w * h> data;
 
     const unsigned int width = w;
     const unsigned int height = h;
 
-    StaticMatrix():
+    static_matrix():
 	data(std::array<T, w * h>())
     {
     }
 
-    ~StaticMatrix() {
+    ~static_matrix() {
 
     }
 
@@ -202,7 +202,7 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr const T& at () const {
     	// bounds checking
-    	static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside StaticMatrix.");
+    	static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside static_matrix.");
     	return data[y * w + x];
     }
 
@@ -213,7 +213,7 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr T& at () {
     	// bounds checking
-    	static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside StaticMatrix.");
+    	static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside static_matrix.");
     	return data[y * w + x];
     }
 
@@ -237,7 +237,7 @@ public:
 	 * Adds a matrix to another.
 	 * For now, adding matrices off differing sizes is undefined behavior/unsupported.
 	 */
-    StaticMatrix& operator+= (const StaticMatrix<T, w, h>& rhs) {
+    static_matrix& operator+= (const static_matrix<T, w, h>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] += rhs.data[i];
@@ -249,7 +249,7 @@ public:
 	 * Adds two matrices together.
 	 * For now, adding matrices of differing sizes is undefined behavior/unsupported.
 	 */
-	friend StaticMatrix operator+ (StaticMatrix<T, w, h> lhs, const StaticMatrix<T, w, h>& rhs) {
+	friend static_matrix operator+ (static_matrix<T, w, h> lhs, const static_matrix<T, w, h>& rhs) {
 		lhs += rhs;
 		return lhs;
 	}
@@ -261,7 +261,7 @@ public:
     	typename N,
     	typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type
 	>
-    StaticMatrix& operator+= (const N& rhs) {
+    static_matrix& operator+= (const N& rhs) {
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] += rhs;
 		}
@@ -276,7 +276,7 @@ public:
     	typename N,
     	typename = typename std::enable_if<std::is_arithmetic<N>::value, N>::type
 	>
-	friend StaticMatrix operator+ (StaticMatrix<T, w, h> lhs, const N& rhs) {
+	friend static_matrix operator+ (static_matrix<T, w, h> lhs, const N& rhs) {
 		lhs += rhs;
 		return lhs;
 	}
@@ -285,7 +285,7 @@ public:
 	 * Subtracts a matrix from another.
 	 * For now, subtracting matrices of differing sizes is undefined behavior/unsupported.
 	 */
-    StaticMatrix& operator-= (const StaticMatrix<T, w, h>& rhs) {
+    static_matrix& operator-= (const static_matrix<T, w, h>& rhs) {
     	// todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
 		for (unsigned int i = 0; i < data.size(); ++i) {
 			data[i] -= rhs.data[i];
@@ -297,7 +297,7 @@ public:
 	 * Subtracts two matrices from one another.
 	 * For now, subtracting matrices of differing sizes is undefined behavior/unsupported.
 	 */
-	friend StaticMatrix operator- (StaticMatrix<T, w, h> lhs, const StaticMatrix<T, w, h>& rhs) {
+	friend static_matrix operator- (static_matrix<T, w, h> lhs, const static_matrix<T, w, h>& rhs) {
 		lhs -= rhs;
 		return lhs;
 	}
@@ -310,12 +310,12 @@ public:
 		unsigned int lhs_width, unsigned int lhs_height,
 		unsigned int rhs_width, unsigned int rhs_height
 	>
-	friend StaticMatrix<T, rhs_width, lhs_height> operator* (
-		const StaticMatrix<T, lhs_width, lhs_height>& lhs, const StaticMatrix<T, rhs_width, rhs_height>& rhs
+	friend static_matrix<T, rhs_width, lhs_height> operator* (
+		const static_matrix<T, lhs_width, lhs_height>& lhs, const static_matrix<T, rhs_width, rhs_height>& rhs
 	) {
-    	static_assert(rhs_height == lhs_width, "Righthand side StaticMatrix height must equal lefthand side StaticMatrix width.");
+    	static_assert(rhs_height == lhs_width, "Righthand side static_matrix height must equal lefthand side static_matrix width.");
 
-    	StaticMatrix<T, rhs_width, lhs_height> result;
+    	static_matrix<T, rhs_width, lhs_height> result;
 
     	// TODO: optimise cache locality of this
 

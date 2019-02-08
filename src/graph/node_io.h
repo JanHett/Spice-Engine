@@ -6,24 +6,24 @@
 #include <vector>
 
 template <class T>
-class Output;
+class output;
 
 template <class T>
-class Input: public std::enable_shared_from_this<Input<T>> {
+class input: public std::enable_shared_from_this<input<T>> {
 private:
     template <class fT>
-    friend class Output;
+    friend class output;
 
     /**
-     * The part of Input::connect() that doesn't interact with Output
+     * The part of input::connect() that doesn't interact with output
      */
-    void _connect(const std::shared_ptr<Output<T>> source) {
+    void _connect(const std::shared_ptr<output<T>> source) {
         this->source = source;
         data = source->data;
     }
 
     /**
-     * The part of Input::disconnect() that doesn't interact with Output
+     * The part of input::disconnect() that doesn't interact with output
      */
     void _disconnect() {
         source.reset();
@@ -34,49 +34,49 @@ public:
     std::string label;
     // TODO: make these private
     std::weak_ptr<T> data; // this is undefined after construction
-    std::weak_ptr<Output<T>> source;
+    std::weak_ptr<output<T>> source;
 
-    Input() = default;
-    Input(const std::string label): label(label) {}
+    input() = default;
+    input(const std::string label): label(label) {}
 
     /**
-     * Hooks this Input up to a source.
+     * Hooks this input up to a source.
      */
-    void connect(std::shared_ptr<Output<T>> source) {
+    void connect(std::shared_ptr<output<T>> source) {
         _connect(source);
         source->_connect(this->shared_from_this());
     }
 
     /**
-     * Breaks the link with this Input's source.
+     * Breaks the link with this input's source.
      */
     void disconnect() {
         source.lock()->_disconnect(this->shared_from_this());
         _disconnect();
     }
 
-    const std::shared_ptr<Output<T>> get_source() {
+    const std::shared_ptr<output<T>> get_source() {
         return source.lock();
     }
 };
 
 template <class T>
-class Output: public std::enable_shared_from_this<Output<T>> {
+class output: public std::enable_shared_from_this<output<T>> {
 private:
     template <class fT>
-    friend class Input;
+    friend class input;
 
     /**
-     * The part of Output::connect() that doesn't interact with Input
+     * The part of output::connect() that doesn't interact with input
      */
-    void _connect(const std::shared_ptr<Input<T>> consumer) {
+    void _connect(const std::shared_ptr<input<T>> consumer) {
         consumers.push_back(consumer);
     }
 
     /**
-     * The part of Output::disconnect() that doesn't interact with Input
+     * The part of output::disconnect() that doesn't interact with input
      */
-    void _disconnect(std::shared_ptr<Input<T>> consumer) {
+    void _disconnect(std::shared_ptr<input<T>> consumer) {
         for (auto it = consumers.begin(); it != consumers.end(); ) {
             if (it->lock() == consumer) {
                 consumers.erase(it);
@@ -89,23 +89,23 @@ public:
     std::string label;
     // TODO: make these private
     std::shared_ptr<T> data; // this is undefined after construction
-    std::vector<std::weak_ptr<Input<T>>> consumers;
+    std::vector<std::weak_ptr<input<T>>> consumers;
 
-    Output() = default;
-    Output(const std::string label): label(label) {}
+    output() = default;
+    output(const std::string label): label(label) {}
 
     /**
-     * Adds an Input that will consume data from this Output.
+     * Adds an input that will consume data from this output.
      */
-    void connect(std::shared_ptr<Input<T>> consumer) {
+    void connect(std::shared_ptr<input<T>> consumer) {
         _connect(consumer);
         consumer->_connect(this->shared_from_this());
     }
 
     /**
-     * Removes a consumer from this Output.
+     * Removes a consumer from this output.
      */
-    void disconnect(std::shared_ptr<Input<T>> consumer) {
+    void disconnect(std::shared_ptr<input<T>> consumer) {
         _disconnect(consumer);
         consumer->disconnect();
     }

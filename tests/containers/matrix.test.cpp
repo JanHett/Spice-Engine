@@ -6,14 +6,14 @@
 #include "../../src/containers/matrix.h"
 
 TEST(Matrix, ConstructorEmpty) {
-	Matrix<float> m;
+	matrix<float> m;
 	EXPECT_EQ(1, m.width);
 	EXPECT_EQ(1, m.height);
 	EXPECT_EQ(0, (m.at<0, 0>()));
 }
 
 TEST(Matrix, ConstructorDimensions) {
-	Matrix<float> m(2, 3);
+	matrix<float> m(2, 3);
 	EXPECT_EQ(2, m.width);
 	EXPECT_EQ(3, m.height);
 	EXPECT_EQ(0, (m.at<0, 0>()));
@@ -25,11 +25,11 @@ TEST(Matrix, ConstructorDimensions) {
 }
 
 TEST(Matrix, StaticConstAt) {
-	Matrix<int> _m(2, 2);
+	matrix<int> _m(2, 2);
 	_m.data[1] = 42;
 
 	// make a const copy to force using const version of the function
-	const Matrix<int> m = _m;
+	const matrix<int> m = _m;
 
 	// check if accessing works
 	EXPECT_EQ(0, (m.at<0, 0>()));
@@ -39,7 +39,7 @@ TEST(Matrix, StaticConstAt) {
 }
 
 TEST(Matrix, StaticAt) {
-	Matrix<int> m(2,2);
+	matrix<int> m(2,2);
 	m.data[1] = 42;
 
 	// check if accessing works
@@ -54,11 +54,11 @@ TEST(Matrix, StaticAt) {
 }
 
 TEST(Matrix, ConstAt) {
-	Matrix<int> _m(2, 2);
+	matrix<int> _m(2, 2);
 	_m.data[1] = 42;
 
 	// make a const copy to force using const version of the function
-	const Matrix<int> m = _m;
+	const matrix<int> m = _m;
 
 	// check if accessing works
 	EXPECT_EQ(0, m.at(0, 0));
@@ -68,7 +68,7 @@ TEST(Matrix, ConstAt) {
 }
 
 TEST(Matrix, At) {
-	Matrix<int> m(2, 2);
+	matrix<int> m(2, 2);
 	m.data[1] = 42;
 
 	// check if accessing works
@@ -83,8 +83,8 @@ TEST(Matrix, At) {
 }
 
 TEST(Matrix, OperatorAddEquals) {
-	Matrix<float> m(3, 3);
-	Matrix<float> n(3, 3);
+	matrix<float> m(3, 3);
+	matrix<float> n(3, 3);
 
 	m.data[0] = 4;
 	n.data[0] = 2;
@@ -100,15 +100,15 @@ TEST(Matrix, OperatorAddEquals) {
 }
 
 TEST(Matrix, OperatorAdd) {
-	Matrix<float> m(3, 3);
-	Matrix<float> n(3, 3);
+	matrix<float> m(3, 3);
+	matrix<float> n(3, 3);
 
 	m.data[0] = 4;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.data.size(), n.data.size());
 
-	Matrix<float> res = m + n;
+	matrix<float> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -118,7 +118,7 @@ TEST(Matrix, OperatorAdd) {
 }
 
 TEST(Matrix, OperatorScalarAddEquals) {
-	Matrix<float> m(3, 3);
+	matrix<float> m(3, 3);
 	unsigned int n = 42;
 
 	m.data[0] = 5;
@@ -129,12 +129,12 @@ TEST(Matrix, OperatorScalarAddEquals) {
 }
 
 TEST(Matrix, OperatorScalarAdd) {
-	Matrix<float> m(3, 3);
+	matrix<float> m(3, 3);
 	unsigned int n = 42;
 
 	m.data[0] = 5;
 
-	Matrix<float> res = m + n;
+	matrix<float> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_EQ(47, res.data[0]);
@@ -143,8 +143,8 @@ TEST(Matrix, OperatorScalarAdd) {
 }
 
 TEST(Matrix, OperatorSubtractEquals) {
-	Matrix<float> m(3, 3);
-	Matrix<float> n(3, 3);
+	matrix<float> m(3, 3);
+	matrix<float> n(3, 3);
 
 	m.data[0] = 42;
 	n.data[0] = 2;
@@ -160,15 +160,15 @@ TEST(Matrix, OperatorSubtractEquals) {
 }
 
 TEST(Matrix, OperatorSubtract) {
-	Matrix<float> m(3, 3);
-	Matrix<float> n(3, 3);
+	matrix<float> m(3, 3);
+	matrix<float> n(3, 3);
 
 	m.data[0] = 42;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.data.size(), n.data.size());
 
-	Matrix<float> res = m - n;
+	matrix<float> res = m - n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -178,7 +178,7 @@ TEST(Matrix, OperatorSubtract) {
 }
 
 TEST(Matrix, OperatorMultiply) {
-	Matrix<int> m(2, 3);
+	matrix<int> m(2, 3);
 	m.at<0, 0>() = 42;
 	m.at<0, 1>() = 47;
 	m.at<0, 2>() = 42;
@@ -186,7 +186,7 @@ TEST(Matrix, OperatorMultiply) {
 	m.at<1, 1>() = 42;
 	m.at<1, 2>() = 47;
 
-	Matrix<int> n(3, 2);
+	matrix<int> n(3, 2);
 	n.at<0, 0>() = 47;
 	n.at<0, 1>() = 42;
 	n.at<1, 0>() = 47;
@@ -194,7 +194,7 @@ TEST(Matrix, OperatorMultiply) {
 	n.at<2, 0>() = 47;
 	n.at<2, 1>() = 42;
 
-	const Matrix result = m * n;
+	const matrix result = m * n;
 	EXPECT_EQ(result.height, m.height);
 	EXPECT_EQ(result.width, n.width);
 
@@ -212,11 +212,11 @@ TEST(Matrix, OperatorMultiply) {
 // --------------------
 
 TEST(StaticMatrix, StaticConstAt) {
-	StaticMatrix<int, 2, 2> _m;
+	static_matrix<int, 2, 2> _m;
 	_m.data[1] = 42;
 
 	// make a const copy to force using const version of the function
-	const StaticMatrix<int, 2, 2> m = _m;
+	const static_matrix<int, 2, 2> m = _m;
 
 	// check if accessing works
 	EXPECT_EQ(0, (m.at<0, 0>()));
@@ -226,7 +226,7 @@ TEST(StaticMatrix, StaticConstAt) {
 }
 
 TEST(StaticMatrix, StaticAt) {
-	StaticMatrix<int, 2, 2> m;
+	static_matrix<int, 2, 2> m;
 	m.data[1] = 42;
 
 	// check if accessing works
@@ -241,11 +241,11 @@ TEST(StaticMatrix, StaticAt) {
 }
 
 TEST(StaticMatrix, ConstAt) {
-	StaticMatrix<int, 2, 2> _m;
+	static_matrix<int, 2, 2> _m;
 	_m.data[1] = 42;
 
 	// make a const copy to force using const version of the function
-	const StaticMatrix<int, 2, 2> m = _m;
+	const static_matrix<int, 2, 2> m = _m;
 
 	// check if accessing works
 	EXPECT_EQ(0, m.at(0, 0));
@@ -255,7 +255,7 @@ TEST(StaticMatrix, ConstAt) {
 }
 
 TEST(StaticMatrix, At) {
-	StaticMatrix<int, 2, 2> m;
+	static_matrix<int, 2, 2> m;
 	m.data[1] = 42;
 
 	// check if accessing works
@@ -270,8 +270,8 @@ TEST(StaticMatrix, At) {
 }
 
 TEST(StaticMatrix, OperatorAddEquals) {
-	StaticMatrix<float, 3, 3> m;
-	StaticMatrix<float, 3, 3> n;
+	static_matrix<float, 3, 3> m;
+	static_matrix<float, 3, 3> n;
 
 	m.data[0] = 4;
 	n.data[0] = 2;
@@ -287,15 +287,15 @@ TEST(StaticMatrix, OperatorAddEquals) {
 }
 
 TEST(StaticMatrix, OperatorAdd) {
-	StaticMatrix<float, 3, 3> m;
-	StaticMatrix<float, 3, 3> n;
+	static_matrix<float, 3, 3> m;
+	static_matrix<float, 3, 3> n;
 
 	m.data[0] = 4;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.data.size(), n.data.size());
 
-	StaticMatrix<float, 3, 3> res = m + n;
+	static_matrix<float, 3, 3> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -305,7 +305,7 @@ TEST(StaticMatrix, OperatorAdd) {
 }
 
 TEST(StaticMatrix, OperatorScalarAddEquals) {
-	StaticMatrix<float, 3, 3> m;
+	static_matrix<float, 3, 3> m;
 	unsigned int n = 42;
 
 	m.data[0] = 5;
@@ -316,12 +316,12 @@ TEST(StaticMatrix, OperatorScalarAddEquals) {
 }
 
 TEST(StaticMatrix, OperatorScalarAdd) {
-	StaticMatrix<float, 3, 3> m;
+	static_matrix<float, 3, 3> m;
 	unsigned int n = 42;
 
 	m.data[0] = 5;
 
-	StaticMatrix<float, 3, 3> res = m + n;
+	static_matrix<float, 3, 3> res = m + n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_EQ(47, res.data[0]);
@@ -330,8 +330,8 @@ TEST(StaticMatrix, OperatorScalarAdd) {
 }
 
 TEST(StaticMatrix, OperatorSubtractEquals) {
-	StaticMatrix<float, 3, 3> m;
-	StaticMatrix<float, 3, 3> n;
+	static_matrix<float, 3, 3> m;
+	static_matrix<float, 3, 3> n;
 
 	m.data[0] = 42;
 	n.data[0] = 2;
@@ -347,15 +347,15 @@ TEST(StaticMatrix, OperatorSubtractEquals) {
 }
 
 TEST(StaticMatrix, OperatorSubtract) {
-	StaticMatrix<float, 3, 3> m;
-	StaticMatrix<float, 3, 3> n;
+	static_matrix<float, 3, 3> m;
+	static_matrix<float, 3, 3> n;
 
 	m.data[0] = 42;
 	n.data[0] = 2;
 
 	EXPECT_EQ(m.data.size(), n.data.size());
 
-	StaticMatrix<float, 3, 3> res = m - n;
+	static_matrix<float, 3, 3> res = m - n;
 
 	EXPECT_NE(&m, &res);
 	EXPECT_NE(&n, &res);
@@ -365,7 +365,7 @@ TEST(StaticMatrix, OperatorSubtract) {
 }
 
 TEST(StaticMatrix, OperatorMultiply) {
-	StaticMatrix<int, 2, 3> m;
+	static_matrix<int, 2, 3> m;
 	m.at<0, 0>() = 42;
 	m.at<0, 1>() = 47;
 	m.at<0, 2>() = 42;
@@ -373,7 +373,7 @@ TEST(StaticMatrix, OperatorMultiply) {
 	m.at<1, 1>() = 42;
 	m.at<1, 2>() = 47;
 
-	StaticMatrix<int, 3, 2> n;
+	static_matrix<int, 3, 2> n;
 	n.at<0, 0>() = 47;
 	n.at<0, 1>() = 42;
 	n.at<1, 0>() = 47;
@@ -381,7 +381,7 @@ TEST(StaticMatrix, OperatorMultiply) {
 	n.at<2, 0>() = 47;
 	n.at<2, 1>() = 42;
 
-	const StaticMatrix result = m * n;
+	const static_matrix result = m * n;
 	EXPECT_EQ(result.height, m.height);
 	EXPECT_EQ(result.width, n.width);
 

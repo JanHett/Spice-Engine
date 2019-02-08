@@ -17,7 +17,7 @@ struct ppm
     }
 
     template<size_t channels>
-    static ppm from_pixel_matrix(Matrix<Pixel<channels>> m, unsigned int maxval = 256) {
+    static ppm from_pixel_matrix(matrix<pixel<channels>> m, unsigned int maxval = 256) {
         ppm img;
 
         img.width = m.width;
@@ -33,17 +33,26 @@ struct ppm
                 for (unsigned int channel = 0; channel < 3; ++channel) {
                     img.data[y * m.width + x + channel] = channel <= channels ?
                         // if there is data for this particular channel in the matrix, clamp it and multiply by maxval
-                        std::min(m.at(x, y)[channel], 1) * img.maxval - 1 :
-                        0;  // otherwise just write 0
+                        std::min(m.at(x, y)[channel], 1.f) * (img.maxval - 1) :
+                        0; // otherwise just write 0
                 }
             }
         }
+
+        return img;
     }
 
-    Matrix<Pixel<3>> to_pixel_matrix() {
-        Matrix<Pixel<3>> m(width, height);
+    matrix<pixel<3>> to_pixel_matrix() {
+        matrix<pixel<3>> m(width, height);
 
         // do data parsing
+        for (unsigned int x = 0; x < m.width; ++x) {
+            for (unsigned int y = 0; y < m.height; ++y) {
+                for (unsigned int channel = 0; channel < 3; ++channel) {
+                    m.at(x, y)[channel] = data[y * m.width + x + channel];
+                }
+            }
+        }
 
         return m;
     }
