@@ -18,7 +18,7 @@ public:
     const unsigned int height;
 
     matrix(unsigned int w = 1, unsigned int h = 1):
-	data(std::vector<T>(w * h)),
+	data(w * h),
 	width(w),
 	height(h)
     {
