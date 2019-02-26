@@ -1,11 +1,14 @@
 #ifndef SPICE_NODE
 #define SPICE_NODE
+
 #include <string>
 #include <vector>
 
 #include "node_io.h"
 #include "../containers/matrix.h"
 #include "../containers/pixel.h"
+
+#include "../file_formats/pbm.h"
 
 template <class T>
 class node {
@@ -18,7 +21,7 @@ protected:
 public:
     std::string id;
 
-    node(const std::string id): id(id) {}
+    node(const char * id): id(id) {}
 
     std::vector<input<T>> const & get_inputs() const {
         return inputs;
@@ -36,27 +39,33 @@ public:
 
 class Loader: public node<matrix<pixel<4>>> {
 private:
-	std::shared_ptr<matrix<pixel<4>>> data;
+    std::shared_ptr<matrix<pixel<4>>> data;
 public:
-    Loader(const std::string id): node(id) {
-    	// no actual data yet, but we need an empty pointer to point the output to
+    Loader(const char * id): node(id) {
+        // no actual data yet, but we need an empty pointer to point the output to
         data = std::make_shared<matrix<pixel<4>>>();
         outputs.push_back(output<matrix<pixel<4>>>("Image"));
         outputs[0].data = data;
     }
     
-    Loader(const std::string id, const std::string path): node(id) {
+    Loader(const char * id, const char * path): node(id) {
         open(path);
         outputs.push_back(output<matrix<pixel<4>>>("Image"));
         outputs[0].data = data;
     }
 
     /**
-     * Sets the source path and loads the file as an image.
+     * Sets the source path and loads the specified file as an image.
      */
-    bool open(const std::string path) {
-    	data = std::make_shared<matrix<pixel<4>>>();
-        return path.length() > 0;
+    bool open(const char * path) {
+        try {
+            auto m = ppm(path).to_pixel_matrix<4>();
+            data = std::make_shared<matrix<pixel<4>>>(m);
+        } catch (char const * err) {
+            fprintf(stderr, "%s\n", err);
+            return false;
+        }
+        return true;
     }
 
     /**

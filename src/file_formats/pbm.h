@@ -1,3 +1,6 @@
+#ifndef SPICE_PBM
+#define SPICE_PBM
+
 #include <string>
 #include <algorithm>
 #include <fstream>
@@ -59,23 +62,30 @@ struct ppm
     ppm(char const * filename) {
         std::ifstream file;
         file.open(filename, std::ios::binary);
-        
-        std::string header;
-        file >> header;
-        std::cout << header << std::endl;
-        if (header != "P6") throw (std::string(filename) + " is not a valid PPM file.");
-        file >> width >> height >> maxval;
-        file.ignore(256, '\n');
 
-        std::cout << "Width: " << width << ", height: " << height << ", maxval: " << maxval << std::endl;
+        try {
+            if (file.fail()) { throw ("Cannot open input file."); }
 
-        size_t channel_size = maxval <= 256 ? 1 : 2;
-        size_t data_length = channel_size * sizeof(uint8_t) * 3 * width * height;
-        data = new uint8_t[data_length];
-        for (unsigned int i = 0; i < data_length; ++i) {
-            file >> data[i];
-            std::cout << "Read value " << data[i] << " into data[" << i << "]" << std::endl;
+            // check magic number - will be discarded right away
+            std::string header;
+            file >> header;
+            if (header != "P6") throw (std::string(filename) + " is not a valid PPM file.");
+
+            file >> width >> height >> maxval;
+            file.ignore(256, '\n');
+
+            size_t channel_size = maxval <= 256 ? 1 : 2;
+            size_t data_length = channel_size * sizeof(uint8_t) * 3 * width * height;
+            data = new uint8_t[data_length];
+            for (unsigned int i = 0; i < data_length; ++i) {
+                file >> data[i];
+            }
+        } catch (char const * err) {
+            fprintf(stderr, "%s\n", err); 
+            file.close();
         }
+        
+        
 
         file.close();
     }
@@ -85,20 +95,24 @@ struct ppm
     }
 
     // template<size_t channels>
-    static ppm from_pixel_matrix(matrix<pixel<channels>> m, unsigned int maxval = 256) {
+    [[nodiscard]] static ppm from_pixel_matrix(matrix<pixel<channels>> m, unsigned int maxval = 256) {
         ppm img(m, maxval);
 
         return img;
     }
 
-    matrix<pixel<3>> to_pixel_matrix() {
-        matrix<pixel<3>> m(width, height);
+    template<size_t matrix_channels = 3>
+    [[nodiscard]] matrix<pixel<matrix_channels>> to_pixel_matrix() {
+        matrix<pixel<matrix_channels>> m(width, height);
 
         // do data parsing
         for (unsigned int x = 0; x < m.width; ++x) {
             for (unsigned int y = 0; y < m.height; ++y) {
-                for (unsigned int channel = 0; channel < 3; ++channel) {
-                    m.at(x, y)[channel] = data[y * m.width * 3 + x * 3 + channel];
+                for (unsigned int channel = 0; channel < matrix_channels; ++channel) {
+                    // set uncovered channels to 0
+                    if (channel > channels) m.at(x, y)[channel] = 0;
+                    // get other data from data array
+                    else m.at(x, y)[channel] = data[y * m.width * 3 + x * 3 + channel] / maxval;
                 }
             }
         }
@@ -124,3 +138,5 @@ std::ostream & operator<<(std::ostream & stream, ppm<channels> const & input) {
     }
     return stream;
 }
+
+#endif // SPICE_PBM

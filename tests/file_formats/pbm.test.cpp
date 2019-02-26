@@ -27,13 +27,13 @@ TEST(PPM, ConstructorFromPixelMatrix) {
 
 TEST(PPM, ConstructorFromFile) {
     try {
-        ppm img("../_data/checker_3x3.pbm");
+        ppm img("../tests/_data/checker_3x3.pbm");
 
         EXPECT_EQ('P', img.magic_number[0]);
         EXPECT_EQ('6', img.magic_number[1]);
-        EXPECT_EQ(3, img.width);
-        EXPECT_EQ(3, img.height);
-        EXPECT_EQ(256, img.maxval);
+        ASSERT_EQ(3, img.width);
+        ASSERT_EQ(3, img.height);
+        EXPECT_EQ(255, img.maxval);
         for (unsigned int i = 0; i < img.width * img.height * 3; ++i) {
             EXPECT_EQ((i / 3) % 2 == 0 ? 0 : 255, img.data[i]);
         }

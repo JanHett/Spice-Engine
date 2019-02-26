@@ -1,3 +1,6 @@
+#ifndef SPICE_MATRIX
+#define SPICE_MATRIX
+
 #include <iostream>
 
 #include <array>
@@ -343,3 +346,5 @@ public:
 		}
 	}
 };
+
+#endif // SPICE_MATRIX

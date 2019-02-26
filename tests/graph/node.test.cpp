@@ -32,7 +32,7 @@ TEST(Loader, ConstructorWithPathPBM) {
 	EXPECT_EQ(3, img->width);
 	EXPECT_EQ(3, img->height);
     for (int i = 0; i < 9; ++i) {
-	    EXPECT_EQ(i % 2 == 0 ? 1 : 0, img->data[i][0]);
+	    EXPECT_EQ(i % 2 == 0 ? 0 : 1, img->data[i][0]);
     }
 }
 
@@ -45,6 +45,6 @@ TEST(Loader, OpenPBM) {
 	EXPECT_EQ(3, img->width);
 	EXPECT_EQ(3, img->height);
     for (int i = 0; i < 9; ++i) {
-	    EXPECT_EQ(i % 2 == 0 ? 1 : 0, img->data[i][0]);
+	    EXPECT_EQ(i % 2 == 0 ? 0 : 1, img->data[i][0]);
     }
 }
