@@ -7,15 +7,15 @@
 
 TEST(Matrix, ConstructorEmpty) {
 	matrix<float> m;
-	EXPECT_EQ(1, m.width);
-	EXPECT_EQ(1, m.height);
+	EXPECT_EQ(1, m.get_width());
+	EXPECT_EQ(1, m.get_height());
 	EXPECT_EQ(0, (m.at<0, 0>()));
 }
 
 TEST(Matrix, ConstructorDimensions) {
 	matrix<float> m(2, 3);
-	EXPECT_EQ(2, m.width);
-	EXPECT_EQ(3, m.height);
+	EXPECT_EQ(2, m.get_width());
+	EXPECT_EQ(3, m.get_height());
 	EXPECT_EQ(0, (m.at<0, 0>()));
 	EXPECT_EQ(0, (m.at<1, 0>()));
 	EXPECT_EQ(0, (m.at<0, 1>()));
@@ -80,6 +80,23 @@ TEST(Matrix, At) {
 	// check if assigning works
 	m.at(0,1) = 47;
 	EXPECT_EQ(47, m.at(0, 1));
+}
+
+TEST(Matrix, OperatorCopyAssignment) {
+	matrix<int> m(2, 2);
+	m.data[1] = 42;
+
+	auto m_copy = m;
+
+	EXPECT_EQ(0, m_copy.at(0, 0));
+	EXPECT_EQ(42, m_copy.at(1, 0));
+	EXPECT_EQ(0, m_copy.at(0, 1));
+	EXPECT_EQ(0, m_copy.at(1, 1));
+	
+	// check if it's really a copy
+	m.at(0,1) = 47;
+	EXPECT_EQ(0, m_copy.at(0, 1));
+	EXPECT_NE(&m, &m_copy);
 }
 
 TEST(Matrix, OperatorAddEquals) {
@@ -195,8 +212,8 @@ TEST(Matrix, OperatorMultiply) {
 	n.at<2, 1>() = 42;
 
 	const matrix result = m * n;
-	EXPECT_EQ(result.height, m.height);
-	EXPECT_EQ(result.width, n.width);
+	EXPECT_EQ(result.get_height(), m.get_height());
+	EXPECT_EQ(result.get_width(), n.get_width());
 
 	EXPECT_EQ(3948, (result.at<0, 0>()));
 	EXPECT_EQ(3973, (result.at<0, 1>()));

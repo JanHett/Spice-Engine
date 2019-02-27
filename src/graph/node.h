@@ -49,6 +49,7 @@ public:
     }
     
     Loader(const char * id, const char * path): node(id) {
+        // no need to instanciate pixel matrix out here, this is done in open()
         open(path);
         outputs.push_back(output<matrix<pixel<4>>>("Image"));
         outputs[0].data = data;
@@ -60,7 +61,9 @@ public:
     bool open(const char * path) {
         try {
             auto m = ppm(path).to_pixel_matrix<4>();
-            data = std::make_shared<matrix<pixel<4>>>(m);
+            // if there is not yet a data matrix, create one for this image
+            if (data == nullptr) data = std::make_shared<matrix<pixel<4>>>(m);
+            else *data = m;
         } catch (char const * err) {
             fprintf(stderr, "%s\n", err);
             return false;

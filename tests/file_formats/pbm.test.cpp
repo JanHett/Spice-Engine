@@ -70,8 +70,8 @@ TEST(PPM, to_pixel_matrix) {
 
     auto result = img.to_pixel_matrix();
 
-    EXPECT_EQ(m.width, result.width);
-    EXPECT_EQ(m.height, result.height);
+    EXPECT_EQ(m.get_width(), result.get_width());
+    EXPECT_EQ(m.get_height(), result.get_height());
     for (unsigned int i = 0; i < m.data.size(); ++i) {
         for (unsigned int channel = 0; channel < 3; ++channel) {
             EXPECT_EQ(m.data[i][channel], result.data[i][channel]);

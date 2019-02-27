@@ -14,11 +14,14 @@
  */
 template <class T>
 class matrix {
+private:
+	unsigned int width;
+    unsigned int height;
 public:
     std::vector<T> data;
 
-    const unsigned int width;
-    const unsigned int height;
+    unsigned int const & get_width() const { return width; }
+    unsigned int const & get_height() const { return height; }
 
     matrix(unsigned int w = 1, unsigned int h = 1):
 	data(w * h),
@@ -67,6 +70,17 @@ public:
     T& at (const unsigned int x, const unsigned int y) {
     	// TODO: bounds checking
     	return data[y * width + x];
+    }
+
+    /** copy assignment */
+    matrix& operator=(const matrix<T>& other) {
+    	if (this != &other) {
+    		width = other.width;
+    		height = other.height;
+    		// TODO: can storage be reused?
+    		data = other.data;
+    	}
+    	return *this;
     }
 
     /**

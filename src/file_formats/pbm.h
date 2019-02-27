@@ -32,13 +32,13 @@ struct ppm
      * Constructs a ppm with data contained in matrix m and maxval 256 unless specified otherwise
      */
     ppm(matrix<pixel<channels>> const m, unsigned int const maxval = 256) {
-        width = m.width;
-        height = m.height;
+        width = m.get_width();
+        height = m.get_height();
         this->maxval = maxval;
 
         // calculate and allocate necessary space
         size_t channel_size = maxval <= 256 ? 1 : 2;
-        size_t data_length = channel_size * sizeof(uint8_t) * 3 * m.width * m.height;
+        size_t data_length = channel_size * sizeof(uint8_t) * 3 * m.get_width() * m.get_height();
         data = new uint8_t[data_length];
         // write the image data
         unsigned int idx = 0;   // the current position in the ppm data array
@@ -106,13 +106,13 @@ struct ppm
         matrix<pixel<matrix_channels>> m(width, height);
 
         // do data parsing
-        for (unsigned int x = 0; x < m.width; ++x) {
-            for (unsigned int y = 0; y < m.height; ++y) {
+        for (unsigned int x = 0; x < m.get_width(); ++x) {
+            for (unsigned int y = 0; y < m.get_height(); ++y) {
                 for (unsigned int channel = 0; channel < matrix_channels; ++channel) {
                     // set uncovered channels to 0
-                    if (channel > channels) m.at(x, y)[channel] = 0;
+                    if (channel >= channels) m.at(x, y)[channel] = 0;
                     // get other data from data array
-                    else m.at(x, y)[channel] = data[y * m.width * 3 + x * 3 + channel] / maxval;
+                    else m.at(x, y)[channel] = data[y * m.get_width() * 3 + x * 3 + channel] / maxval;
                 }
             }
         }
