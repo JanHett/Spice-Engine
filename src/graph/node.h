@@ -42,7 +42,7 @@ private:
     std::shared_ptr<matrix<pixel<4>>> data;
 public:
     Loader(const char * id): node(id) {
-        // no actual data yet, but we need an empty pointer to point the output to
+        // no actual data yet, but we need an empty image to point the output to to create a valid state
         data = std::make_shared<matrix<pixel<4>>>();
         outputs.push_back(output<matrix<pixel<4>>>("Image"));
         outputs[0].data = data;
