@@ -37,18 +37,18 @@ public:
     virtual bool apply() = 0;
 };
 
-class Loader: public node<matrix<pixel<4>>> {
+class loader: public node<matrix<pixel<4>>> {
 private:
     std::shared_ptr<matrix<pixel<4>>> data;
 public:
-    Loader(const char * id): node(id) {
+    loader(const char * id): node(id) {
         // no actual data yet, but we need an empty image to point the output to to create a valid state
         data = std::make_shared<matrix<pixel<4>>>();
         outputs.push_back(output<matrix<pixel<4>>>("Image"));
         outputs[0].data = data;
     }
     
-    Loader(const char * id, const char * path): node(id) {
+    loader(const char * id, const char * path): node(id) {
         // no need to instanciate pixel matrix out here, this is done in open()
         open(path);
         outputs.push_back(output<matrix<pixel<4>>>("Image"));
@@ -76,6 +76,26 @@ public:
      */
     bool apply() {
         return false;
+    }
+};
+
+class convolution: public node<matrix<pixel<4>>> {
+private:
+    std::shared_ptr<matrix<pixel<4>>> data;
+    std::shared_ptr<matrix<pixel<4>>> convolution_matrix;
+
+public:
+    convolution(const char * id): node(id) {
+        // no actual data yet, but we need an empty image to point the output to to create a valid state
+        data = std::make_shared<matrix<pixel<4>>>();
+        // 
+        inputs.push_back(input<matrix<pixel<4>>>("Image"));
+        data = inputs[0].data.lock();
+        inputs.push_back(input<matrix<pixel<4>>>("Convolution Matrix"));
+        convolution_matrix = inputs[1].data.lock();
+
+        outputs.push_back(output<matrix<pixel<4>>>("Image"));
+        outputs[0].data = data;
     }
 };
 
