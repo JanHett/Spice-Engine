@@ -5,7 +5,7 @@
 #include "../../src/graph/node.h"
 
 TEST(Node, get_outputs) {
-	Loader l("test");
+	loader l("test");
 
 	auto& outs = l.get_outputs();
 	static_assert(
@@ -17,15 +17,15 @@ TEST(Node, get_outputs) {
 	EXPECT_NE(nullptr, outs[0].data);
 }
 
-TEST(Loader, ConstructorEmpty) {
-	Loader l("MyLoader");
+TEST(loader, ConstructorEmpty) {
+	loader l("MyLoader");
 
 	EXPECT_NE(nullptr, l.get_outputs()[0].data);
 	EXPECT_EQ(0.0f, l.get_outputs()[0].data->data[0][0]);
 }
 
 TEST(Loader, ConstructorWithPathPBM) {
-    Loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
+    loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
 
 	// should be a 3x3 checker pattern
 	auto img = l.get_outputs()[0].data;
@@ -37,7 +37,7 @@ TEST(Loader, ConstructorWithPathPBM) {
 }
 
 TEST(Loader, OpenPBM) {
-    Loader l("MyLoader");
+    loader l("MyLoader");
     l.open("../tests/_data/checker_3x3.pbm");
 
 	// should be a 3x3 checker pattern
