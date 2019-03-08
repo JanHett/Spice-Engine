@@ -8,6 +8,10 @@
 #include "../containers/matrix.h"
 #include "../containers/pixel.h"
 
+/**
+Implemented according to the specification found here: http://netpbm.sourceforge.net/doc/ppm.html
+*/
+
 template<size_t channels = 3>
 struct ppm
 {
