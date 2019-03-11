@@ -35,11 +35,14 @@ float, int, string etc...
 
 ## Node Types
 
-*Note on in/outputs: optional In/Outputs are wrapped in [ square brackets ]. In/outputs wrapped in [[double square brackets]] are optional and hidden until they are relevant. Unspecified obligatory in/outputs are automatically deferred to the parent recipe.*
+*Note on in/outputs:* optional inputs are wrapped in [ square brackets ]. Unspecified obligatory inputs are automatically deferred to the parent recipe.
+In/outputs wrapped in [[double square brackets]] are optional and hidden until they are relevant.
+
+Currently unimplemented node types are set in *italic*. The planned release version is noted after the pipe "|" (some features might be missing upon release).
 
 ### Data I/O
 
-#### Asset
+#### *Asset | v 0.1.0*
 
 Reads or writes a source file.
 
@@ -54,33 +57,90 @@ As of yet unimplemented.
 
 - [[ Data: `any` ]] - the data read from the path (if it exists)
 
-#### Colour
+#### *Plane | v 0.1.0*
+
+Generates a solid colour or gradient on an infinite canvas
 
 As of yet unimplemented.
 
-#### Text
+##### Inputs
+
+- Colours: `map<point, rgba>` - colours of the plane - if the map contains exactly one element, the plane has a solid colour
+
+##### Outputs
+- Data: `image`
+
+#### *Text | v 0.2.0*
+
+Typesets a string in a particular font.
 
 As of yet unimplemented.
+
+##### Inputs
+
+- String: `string`
+- Font: `string` // TODO: check if a simple search string is enough for fontconfig
+- Font size: `uint16_t`
+
+##### Outputs
+- Data: `image`
 
 ### Image Processing
 
-#### Blur
+#### *Blend | v 0.1.0*
+
+Combines a stack of images into one.
 
 As of yet unimplemented.
 
-#### Curves
+##### Inputs
+
+- Images: `pair<image, matrix<float>(3,3)>[]` - the images to be blended along with their respective transforms relative to the origin of the blend
+
+##### Outputs
+
+- Data: `image`
+
+#### *Blur | v 0.1.0*
 
 As of yet unimplemented.
 
-#### Convolution
+##### Inputs
+
+##### Outputs
+- Data: `image`
+
+#### *Curves | v 0.2.0*
 
 As of yet unimplemented.
 
-#### Bandpass
+##### Inputs
+
+##### Outputs
+
+- Data: `image`
+
+#### *Convolution | v 0.2.0*
 
 As of yet unimplemented.
 
-#### Crop
+##### Inputs
+
+##### Outputs
+
+- Data: `image`
+
+#### *Bandpass | v 0.3.0*
+
+As of yet unimplemented.
+
+##### Inputs
+
+##### Outputs
+
+- Data: `image`
+
+#### *Crop | v 0.1.0*
 
 Sets the dimensions of the input matrix.
 
@@ -88,20 +148,28 @@ As of yet unimplemented.
 
 ##### Inputs
 
-- Source: `matrix`
-- Width: `int`
-- Height: `int` 
-- Offset: `array<int, 2>` - where to move the crop window relative to the source matrix
+- Source: `image`
+- Transform: `matrix<float>(3,3)` - size, position and rotation of the crop window relative to the source matrix
 
 ##### Outputs
 
-- [ Data: `matrix` ]
+- Data: `image`
 
 ### Transformation
 
-#### Transform
+#### *Transform | v 0.1.0*
+
+A widget to enter transformation data. Multiple transform nodes can be chained to compound their transformations.
 
 As of yet unimplemented.
+
+##### Inputs
+
+- Transform: `matrix<float>(3,3)` - position, scale and rotation
+
+##### Outputs
+
+- Transform: `matrix<float>(3,3)` - position, scale and rotation
 
 ## Feature Goals
 
