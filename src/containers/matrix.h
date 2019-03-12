@@ -6,6 +6,7 @@
 #include <array>
 #include <vector>
 #include <type_traits>
+#include <cmath>
 
 /**
  * Generic matrix class.
@@ -219,7 +220,25 @@ public:
     /**
      * Runs a series of box blur filters over the image to approximate a gaussian blur.
      */
-    matrix<T> fast_blur(float radius) const {
+    matrix<T> fast_blur(float radius, unsigned int passes = 3) const {
+        // algorithm described here: http://blog.ivank.net/fastest-gaussian-blur.html (MIT license)
+        
+        // creates a vector of box-blur sizes for a given standard deviation sigma
+        // increasing n will approximate a true gaussian blur better but decrease performance
+        auto box_sizes = [](float sigma, unsigned int n) {
+            float w_ideal = std::sqrt((12 * sigma * sigma / n) + 1);
+            float wl = std::floorf(w_ideal);
+            if (static_cast<int>(wl) % 2 == 0) --wl;
+            float wu = wl + 2;
+
+            float m_ideal = (12 * sigma * sigma - n * wl * wl - 4 * n * wl - 3 * n)/(-4 * wl - 4);
+            float m = std::roundf(m_ideal);
+
+            std::vector<float> sizes(n);
+            for (unsigned int i = 0; i < n; ++i)
+                sizes[i] = i < m ? wl : wu;
+            return sizes;
+        };
         // TODO
     }
 
