@@ -24,6 +24,41 @@ TEST(Matrix, ConstructorDimensions) {
 	EXPECT_EQ(0, (m.at<1, 2>()));
 }
 
+TEST(Matrix, CopyConstructor) {
+	matrix<int> m(2, 2);
+	m.data[1] = 42;
+
+	matrix<int> copied(m);
+
+	EXPECT_EQ(0, copied.at(0, 0));
+	EXPECT_EQ(42, copied.at(1, 0));
+	EXPECT_EQ(0, copied.at(0, 1));
+	EXPECT_EQ(0, copied.at(1, 1));
+	
+	// check if it's really been copied
+	m.at(0,1) = 47;
+	EXPECT_EQ(0, copied.at(0, 1));
+	EXPECT_NE(&m, &copied);
+}
+
+TEST(Matrix, MoveConstructor) {
+	matrix<int> m(2, 2);
+	m.data[1] = 42;
+
+	// create an rvalue matrix and move it to m_moved
+	auto m_moved = std::move(m);
+
+	EXPECT_EQ(0, m_moved.at(0, 0));
+	EXPECT_EQ(42, m_moved.at(1, 0));
+	EXPECT_EQ(0, m_moved.at(0, 1));
+	EXPECT_EQ(0, m_moved.at(1, 1));
+	
+	// check if it's really been moved from the copy-constructed matrix
+	m.at(0,1) = 47;
+	EXPECT_EQ(0, m_moved.at(0, 1));
+	EXPECT_NE(&m, &m_moved);
+}
+
 TEST(Matrix, StaticConstAt) {
 	matrix<int> _m(2, 2);
 	_m.data[1] = 42;
@@ -86,7 +121,8 @@ TEST(Matrix, OperatorCopyAssignment) {
 	matrix<int> m(2, 2);
 	m.data[1] = 42;
 
-	auto m_copy = m;
+	matrix<int>m_copy;
+	m_copy = m;
 
 	EXPECT_EQ(0, m_copy.at(0, 0));
 	EXPECT_EQ(42, m_copy.at(1, 0));
@@ -97,6 +133,23 @@ TEST(Matrix, OperatorCopyAssignment) {
 	m.at(0,1) = 47;
 	EXPECT_EQ(0, m_copy.at(0, 1));
 	EXPECT_NE(&m, &m_copy);
+}
+
+TEST(Matrix, OperatorMoveAssignment) {
+	// create an rvalue matrix and move it to m_moved
+	auto create_rvalue = []() {
+		matrix<int> m(2, 2);
+		m.data[1] = 42;
+		return m;
+	};
+
+	matrix<int>m_moved;
+	m_moved = create_rvalue();
+
+	EXPECT_EQ(0, m_moved.at(0, 0));
+	EXPECT_EQ(42, m_moved.at(1, 0));
+	EXPECT_EQ(0, m_moved.at(0, 1));
+	EXPECT_EQ(0, m_moved.at(1, 1));
 }
 
 TEST(Matrix, OperatorAddEquals) {
@@ -224,6 +277,37 @@ TEST(Matrix, OperatorMultiply) {
 	EXPECT_EQ(3948, (result.at<2, 0>()));
 	EXPECT_EQ(3973, (result.at<2, 1>()));
 	EXPECT_EQ(3948, (result.at<2, 2>()));
+}
+
+TEST(Matrix, transposeConst) {
+	matrix<int> m(2, 3);
+	m.at<0, 0>() = 1;
+	m.at<0, 1>() = 0;
+	m.at<0, 2>() = 1;
+	m.at<1, 0>() = 0;
+	m.at<1, 1>() = 1;
+	m.at<1, 2>() = 0;
+
+	auto const const_m(m);
+
+	auto transposed = const_m.transpose();
+
+	// check that it's a copy
+	EXPECT_NE(&const_m, &transposed);
+
+	EXPECT_EQ(3, transposed.get_width());
+	EXPECT_EQ(2, transposed.get_height());
+
+	EXPECT_EQ(1, (transposed.at<0, 0>()));
+	EXPECT_EQ(0, (transposed.at<0, 1>()));
+	EXPECT_EQ(0, (transposed.at<1, 0>()));
+	EXPECT_EQ(1, (transposed.at<1, 1>()));
+	EXPECT_EQ(1, (transposed.at<2, 0>()));
+	EXPECT_EQ(0, (transposed.at<2, 1>()));
+}
+
+TEST(Matrix, fast_blur) {
+	// TODO
 }
 
 // --------------------

@@ -57,6 +57,20 @@ As of yet unimplemented.
 
 - [[ Data: `any` ]] - the data read from the path (if it exists)
 
+#### *Recipe | v 0.1.0*
+
+Loads another recipe into the current one.
+
+As of yet unimplemented.
+
+##### Inputs
+
+- Recipe Inputs: `any[]` - all exposed inputs of the child recipe
+
+##### Outputs
+
+- Recipe Outputs: `any[]` - all exposed outputs of the child recipe
+
 #### *Plane | v 0.1.0*
 
 Generates a solid colour or gradient on an infinite canvas
