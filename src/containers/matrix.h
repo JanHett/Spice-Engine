@@ -10,6 +10,12 @@
 
 #include "pixel.h"
 
+enum class overscan_mode {
+    null,
+    repeat,
+    circshift
+};
+
 /**
  * Generic matrix class.
  * This class assumes that `T` is a number-like type providing the mathematical operators +, -, * and /.
@@ -75,18 +81,60 @@ public:
     /**
      * Gets a const reference to an element at specified coordinates.
      */
-    const T& at (const unsigned int x, const unsigned int y) const {
-        // TODO: bounds checking
-        if (x < 0 || x >= p_width || y < 0 || y >= p_height) return p_nullvalue;
+    const T& at (const unsigned int x,
+        const unsigned int y,
+        const overscan_mode overscan = overscan_mode::null) const
+    {
+        // bounds checking
+        if (x < 0 || x >= p_width || y < 0 || y >= p_height) {
+            switch(overscan) {
+                case overscan_mode::repeat:
+                {
+                    unsigned int x_fallback = x < 0 ? 0 : x >= width() ? width() - 1 : x;
+                    unsigned int y_fallback = y < 0 ? 0 : y >= height() ? width() - 1 : y;
+                    return data[y_fallback * width() * x_fallback];
+                }
+                default: return p_nullvalue;
+            }
+        }
+        return data[y * p_width + x];
+    }
+
+    /**
+     * Gets a const reference to an element at specified coordinates.
+     */
+    T& at (const unsigned int x,
+        const unsigned int y,
+        const overscan_mode overscan = overscan_mode::null)
+    {
+        // bounds checking
+        if (x < 0 || x >= p_width || y < 0 || y >= p_height) {
+            switch(overscan) {
+                case overscan_mode::repeat:
+                {
+                    unsigned int x_fallback = x < 0 ? 0 : x >= width() ? width() - 1 : x;
+                    unsigned int y_fallback = y < 0 ? 0 : y >= height() ? width() - 1 : y;
+                    return data[y_fallback * width() * x_fallback];
+                }
+                default: return p_nullvalue;
+            }
+        }
+        return data[y * p_width + x];
+    }
+
+    /**
+     * Gets a const reference to an element at specified coordinates.
+     * operator() does not perform bounds checking.
+     */
+    const T& operator() (const unsigned int x, const unsigned int y) const {
         return data[y * p_width + x];
     }
 
     /**
      * Gets a reference to an element at specified coordinates.
+     * operator() does not perform bounds checking.
      */
-    T& at (const unsigned int x, const unsigned int y) {
-        // TODO: bounds checking
-        if (x < 0 || x >= p_width || y < 0 || y >= p_height) return p_nullvalue;
+    T& operator() (const unsigned int x, const unsigned int y) {
         return data[y * p_width + x];
     }
 

@@ -100,6 +100,10 @@ TEST(Matrix, ConstAt) {
     EXPECT_EQ(42, m.at(1, 0));
     EXPECT_EQ(0, m.at(0, 1));
     EXPECT_EQ(0, m.at(1, 1));
+
+    // check out-of-bounds access
+    EXPECT_EQ(0, m.at(2, 0));
+    EXPECT_EQ(42, m.at(2, 0, overscan_mode::repeat));
 }
 
 TEST(Matrix, At) {
@@ -111,10 +115,43 @@ TEST(Matrix, At) {
     EXPECT_EQ(42, m.at(1, 0));
     EXPECT_EQ(0, m.at(0, 1));
     EXPECT_EQ(0, m.at(1, 1));
+
+    // check out-of-bounds access
+    EXPECT_EQ(0, m.at(2, 0));
+    EXPECT_EQ(42, m.at(2, 0, overscan_mode::repeat));
     
     // check if assigning works
     m.at(0,1) = 47;
     EXPECT_EQ(47, m.at(0, 1));
+}
+
+TEST(Matrix, ConstOperatorCall) {
+    matrix<int> _m(2, 2);
+    _m.data[1] = 42;
+
+    // make a const copy to force using const version of the function
+    const matrix<int> m = _m;
+
+    // check if accessing works
+    EXPECT_EQ(0, m(0, 0));
+    EXPECT_EQ(42, m(1, 0));
+    EXPECT_EQ(0, m(0, 1));
+    EXPECT_EQ(0, m(1, 1));
+}
+
+TEST(Matrix, OperatorCall) {
+    matrix<int> m(2, 2);
+    m.data[1] = 42;
+
+    // check if accessing works
+    EXPECT_EQ(0, m(0, 0));
+    EXPECT_EQ(42, m(1, 0));
+    EXPECT_EQ(0, m(0, 1));
+    EXPECT_EQ(0, m(1, 1));
+    
+    // check if assigning works
+    m(0,1) = 47;
+    EXPECT_EQ(47, m(0, 1));
 }
 
 TEST(Matrix, OperatorCopyAssignment) {
@@ -329,7 +366,8 @@ TEST(Matrix, fast_blur) {
     blurred.print();
 
     // should return a matrix of same type as source
-    static_assert(std::is_same<decltype(m), decltype(blurred)>::value, "Blurred matrix does not have the same type as source");
+    static_assert(std::is_same<decltype(m), decltype(blurred)>::value,
+        "Blurred matrix does not have the same type as source");
 
     // should leave dimensions intact
     EXPECT_EQ(m.width(), blurred.width());
