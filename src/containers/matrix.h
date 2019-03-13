@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <cmath>
 
+#include "pixel.h"
+
 /**
  * Generic matrix class.
  * This class assumes that `T` is a number-like type providing the mathematical operators +, -, * and /.
@@ -16,32 +18,33 @@
 template <class T>
 class matrix {
 private:
-    unsigned int width;
-    unsigned int height;
+    unsigned int p_width;
+    unsigned int p_height;
+    T p_nullvalue{};
 public:
     std::vector<T> data;
 
-    unsigned int const & get_width() const { return width; }
-    unsigned int const & get_height() const { return height; }
+    unsigned int const & width() const { return p_width; }
+    unsigned int const & height() const { return p_height; }
 
     matrix(unsigned int w = 1, unsigned int h = 1):
     data(w * h),
-    width(w),
-    height(h)
+    p_width(w),
+    p_height(h)
     {
     }
 
     matrix(const matrix<T> & other):
     data(other.data),
-    width(other.width),
-    height(other.height)
+    p_width(other.p_width),
+    p_height(other.p_height)
     {
     }
 
     matrix(const matrix<T> && other):
     data(std::move(other.data)),
-    width(std::move(other.width)),
-    height(std::move(other.height))
+    p_width(std::move(other.p_width)),
+    p_height(std::move(other.p_height))
     {
     }
 
@@ -54,8 +57,8 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr const T& at () const {
         // bounds checking
-        // static_assert(y * width + x + 1 <= width * height, "Cannot access coordinates outside matrix.");
-        return data[y * width + x];
+        // static_assert(y * p_width + x + 1 <= p_width * p_height, "Cannot access coordinates outside matrix.");
+        return data[y * p_width + x];
     }
 
     /**
@@ -65,8 +68,8 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr T& at () {
         // bounds checking
-        // static_assert(y * width + x + 1 <= width * height, "Cannot access coordinates outside matrix.");
-        return data[y * width + x];
+        // static_assert(y * p_width + x + 1 <= p_width * p_height, "Cannot access coordinates outside matrix.");
+        return data[y * p_width + x];
     }
 
     /**
@@ -74,7 +77,8 @@ public:
      */
     const T& at (const unsigned int x, const unsigned int y) const {
         // TODO: bounds checking
-        return data[y * width + x];
+        if (x < 0 || x >= p_width || y < 0 || y >= p_height) return p_nullvalue;
+        return data[y * p_width + x];
     }
 
     /**
@@ -82,14 +86,15 @@ public:
      */
     T& at (const unsigned int x, const unsigned int y) {
         // TODO: bounds checking
-        return data[y * width + x];
+        if (x < 0 || x >= p_width || y < 0 || y >= p_height) return p_nullvalue;
+        return data[y * p_width + x];
     }
 
     /** copy assignment */
     matrix& operator=(const matrix<T>& other) {
         if (this != &other) {
-            width = other.width;
-            height = other.height;
+            p_width = other.p_width;
+            p_height = other.p_height;
             // TODO: can storage be reused?
             data = other.data;
         }
@@ -99,8 +104,8 @@ public:
     /** move assignment */
     matrix& operator=(matrix<T>&& other) noexcept {
         if (this != &other) {
-            width = other.width;
-            height = other.height;
+            p_width = other.p_width;
+            p_height = other.p_height;
             data = std::move(other.data);
         }
         return *this;
@@ -182,19 +187,19 @@ public:
     friend matrix<T> operator* (
         const matrix<T>& lhs, const matrix<T>& rhs
     ) {
-        // static_assert(rhs.height == lhs.width, "Righthand side matrix height must equal lefthand side matrix width.");
+        // static_assert(rhs.p_height == lhs.p_width, "Righthand side matrix height must equal lefthand side matrix width.");
 
-        matrix<T> result(rhs.width, lhs.height);
+        matrix<T> result(rhs.p_width, lhs.p_height);
 
         // TODO: optimise cache locality of this
 
         // step through all the lines of the lhs...
-        for (unsigned int line = 0; line < lhs.height; ++line) {
+        for (unsigned int line = 0; line < lhs.p_height; ++line) {
             // and for each, go through all the columns of the rhs
-            for (unsigned int column = 0; column < rhs.width; ++column) {
+            for (unsigned int column = 0; column < rhs.p_width; ++column) {
                 T entry{}; // value-initialising type here to start off with something neutral
-                // go through each entry in their common dimension (lhs.widht == rhs.height) in other dimension that's currently being operated on
-                for (unsigned int i = 0; i < lhs.width; ++i) {
+                // go through each entry in their common dimension (lhs.widht == rhs.p_height) in other dimension that's currently being operated on
+                for (unsigned int i = 0; i < lhs.p_width; ++i) {
                     entry += lhs.at(i, line) * rhs.at(column, i);
                 }
                 result.at(column, line) = entry;
@@ -208,9 +213,9 @@ public:
      * TODO: in-place implementation?
      */
     matrix<T> transpose() const {
-        matrix<T> result(height, width);
-        for (unsigned int y = 0; y < height; ++y) {
-            for (unsigned int x = 0; x < width; ++x) {
+        matrix<T> result(height(), width());
+        for (unsigned int y = 0; y < height(); ++y) {
+            for (unsigned int x = 0; x < width(); ++x) {
                 result.at(y, x) = at(x, y);
             }
         }
@@ -225,7 +230,7 @@ public:
         
         // creates a vector of box-blur sizes for a given standard deviation sigma
         // increasing n will approximate a true gaussian blur better but decrease performance
-        auto box_sizes = [](float sigma, unsigned int n) {
+        auto box_sizes = [=](float sigma, unsigned int n) {
             float w_ideal = std::sqrt((12 * sigma * sigma / n) + 1);
             float wl = std::floorf(w_ideal);
             if (static_cast<int>(wl) % 2 == 0) --wl;
@@ -239,18 +244,103 @@ public:
                 sizes[i] = i < m ? wl : wu;
             return sizes;
         };
-        // TODO
+
+        auto horizontal_blur = [=](matrix<T> const & mtx, float radius) {
+            auto mtx_to_blur = mtx;
+            auto r = static_cast<int>(std::round(radius));
+            auto diameter = r + r + 1;
+            for (unsigned int line = 0; line < mtx.height(); ++line) {
+                T accumulator{};
+                // calculate the first pixel's value -- TODO: can we avoid going over the negative values?
+                for (int offset = -r; offset <= r; ++offset) {
+                    accumulator += mtx.at(offset, line);
+                }
+                accumulator /= diameter;
+                mtx_to_blur.at(0, line) = accumulator;
+
+                // calculate following pixel's values by subtracting left-most pixel within the radius
+                // and adding the one to the right of the right-most for each of the remaining pixels of the row
+                for (unsigned int column = 1; column < mtx.width(); ++column) {
+                    accumulator = accumulator -
+                        (mtx.at(column - r - 1, line) / diameter) +
+                        (mtx.at(column + r, line) / diameter);
+                    mtx_to_blur.at(column, line) = accumulator;
+                }
+            }
+            // for every line...
+            // calculate value for first pixel...
+            // go to next pixel - use the result from previous pixel
+            // subtract weighted pixel at data[col - r + 1] (left-most in blur of last pixel)...
+            // and add weighted pixel at data[col + r] (right most pixel in new blur that was missing from last pixel)
+            return mtx_to_blur;
+        };
+
+        const std::vector<float> radii = box_sizes(radius, passes);
+
+        // compute horizontal blurs
+        // copy is implicit in horizontal_blur lambda
+        auto blurred = horizontal_blur(*this, radii[0]);
+        for (unsigned int radius_i = 1; radius_i < radii.size(); ++radius_i) {
+            blurred = horizontal_blur(blurred, radii[radius_i]);
+        }
+        // transpose
+        blurred = blurred.transpose();
+        // compute vertical blurs (which are horizontal on the transpose)
+        for (unsigned int radius_i = 0; radius_i < radii.size(); ++radius_i) {
+            blurred = horizontal_blur(blurred, radii[radius_i]);
+        }
+        // return transpose of traspose
+        return blurred.transpose();
     }
 
     void print() const {
-        for (unsigned int y = 0; y < height; ++y) {
-            for (unsigned int x = 0; x < width; ++x) {
+        for (unsigned int y = 0; y < height(); ++y) {
+            for (unsigned int x = 0; x < width(); ++x) {
                 std::cout << at(x, y) << " ";
             }
             std::cout << std::endl;
         }
     }
 };
+
+inline void print_greyscale(matrix<float> const & mtx) {
+    // \033[48;2;<r>;<g>;<b>m
+    for (unsigned int y = 0; y < mtx.height(); ++y) {
+        for (unsigned int x = 0; x < mtx.width(); ++x) {
+            std::cout << "\033[48;2;" <<
+            // set BG-colours
+            static_cast<int>(std::floor(mtx.at(x, y) * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y) * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y) * 255)) <<
+            // set FG-colours
+            ";38;2;" <<
+            static_cast<int>(std::floor(mtx.at(x, y) * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y) * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y) * 255)) << "m" << "..";
+        }
+        std::cout << "\033[0m" << std::endl;
+    }
+}
+
+template<int num_channels = 3>
+inline void print_color(matrix<pixel<num_channels>> const & mtx) {
+    // \033[48;2;<r>;<g>;<b>m
+    for (unsigned int y = 0; y < mtx.height(); ++y) {
+        for (unsigned int x = 0; x < mtx.width(); ++x) {
+            std::cout << "\033[48;2;" <<
+            // set BG-colours
+            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) <<
+            // set FG-colours
+            ";38;2;" <<
+            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
+            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) << "m" << "..";
+        }
+        std::cout << "\033[0m" << std::endl;
+    }
+}
 
 /**
  * Generic matrix class.

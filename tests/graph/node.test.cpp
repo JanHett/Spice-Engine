@@ -29,8 +29,8 @@ TEST(Loader, ConstructorWithPathPBM) {
 
 	// should be a 3x3 checker pattern
 	auto img = l.get_outputs()[0].data;
-	EXPECT_EQ(3, img->get_width());
-	EXPECT_EQ(3, img->get_height());
+	EXPECT_EQ(3, img->width());
+	EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {
 	    EXPECT_EQ(i % 2 == 0 ? 0 : 1, img->data[i][0]);
     }
@@ -42,8 +42,8 @@ TEST(Loader, OpenPBM) {
 
 	// should be a 3x3 checker pattern
     auto img = l.get_outputs()[0].data;
-	EXPECT_EQ(3, img->get_width());
-	EXPECT_EQ(3, img->get_height());
+	EXPECT_EQ(3, img->width());
+	EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {
 	    EXPECT_EQ(i % 2 == 0 ? 0 : 1, img->data[i][0]);
     }

@@ -1,3 +1,6 @@
+#ifndef SPICE_TENSOR
+#define SPICE_TENSOR
+
 #include <iostream>
 
 #include <vector>
@@ -163,3 +166,5 @@ public:
 		return coordinates;
 	}
 };
+
+#endif // SPICE_TENSOR
