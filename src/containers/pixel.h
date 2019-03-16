@@ -95,4 +95,14 @@ public:
     }
 };
 
+template <unsigned int num_channels>
+std::ostream& operator<<(std::ostream& os, const pixel<num_channels>& pxl)
+{
+    os << "pixel(";
+    for(auto channel: pxl.data)
+        os << channel << ", ";
+    os << ")";
+    return os;
+}
+
 #endif // SPICE_PIXEL

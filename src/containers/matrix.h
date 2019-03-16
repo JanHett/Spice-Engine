@@ -11,9 +11,9 @@
 #include "pixel.h"
 
 enum class overscan_mode {
-    null,
-    repeat,
-    circshift
+    none,
+    exception,
+    repeat
 };
 
 /**
@@ -26,7 +26,6 @@ class matrix {
 private:
     unsigned int p_width;
     unsigned int p_height;
-    T p_nullvalue{};
 public:
     std::vector<T> data;
 
@@ -81,42 +80,56 @@ public:
     /**
      * Gets a const reference to an element at specified coordinates.
      */
-    const T& at (const unsigned int x,
-        const unsigned int y,
-        const overscan_mode overscan = overscan_mode::null) const
+    const T& at (const int x,
+        const int y,
+        const overscan_mode overscan = overscan_mode::exception) const
     {
         // bounds checking
         if (x < 0 || x >= p_width || y < 0 || y >= p_height) {
             switch(overscan) {
                 case overscan_mode::repeat:
                 {
-                    unsigned int x_fallback = x < 0 ? 0 : x >= width() ? width() - 1 : x;
-                    unsigned int y_fallback = y < 0 ? 0 : y >= height() ? width() - 1 : y;
-                    return data[y_fallback * width() * x_fallback];
+                    int x_fallback = x < 0 ? 0 : x >= p_width ? p_width - 1 : x;
+                    int y_fallback = y < 0 ? 0 : y >= p_height ? p_height - 1 : y;
+                    return data[y_fallback * p_width + x_fallback];
                 }
-                default: return p_nullvalue;
+                case overscan_mode::exception:
+                {
+                    throw std::out_of_range(
+                        std::string("Cannot access ") + std::to_string(p_width) + "x" + std::to_string(p_height) +
+                        " matrix at (" + std::to_string(x) + ", " + std::to_string(y) + ")."
+                    );
+                }
+                default: break;
             }
         }
         return data[y * p_width + x];
     }
 
     /**
-     * Gets a const reference to an element at specified coordinates.
+     * Gets a reference to an element at specified coordinates.
      */
-    T& at (const unsigned int x,
-        const unsigned int y,
-        const overscan_mode overscan = overscan_mode::null)
+    T& at (const int x,
+        const int y,
+        const overscan_mode overscan = overscan_mode::exception)
     {
         // bounds checking
         if (x < 0 || x >= p_width || y < 0 || y >= p_height) {
             switch(overscan) {
                 case overscan_mode::repeat:
                 {
-                    unsigned int x_fallback = x < 0 ? 0 : x >= width() ? width() - 1 : x;
-                    unsigned int y_fallback = y < 0 ? 0 : y >= height() ? width() - 1 : y;
-                    return data[y_fallback * width() * x_fallback];
+                    int x_fallback = x < 0 ? 0 : x >= p_width ? p_width - 1 : x;
+                    int y_fallback = y < 0 ? 0 : y >= p_height ? p_height - 1 : y;
+                    return data[y_fallback * p_width + x_fallback];
                 }
-                default: return p_nullvalue;
+                case overscan_mode::exception:
+                {
+                    throw std::out_of_range(
+                        std::string("Cannot access ") + std::to_string(p_width) + "x" + std::to_string(p_height) +
+                        " matrix at (" + std::to_string(x) + ", " + std::to_string(y) + ")."
+                    );
+                }
+                default: break;
             }
         }
         return data[y * p_width + x];
@@ -301,18 +314,18 @@ public:
                 T accumulator{};
                 // calculate the first pixel's value -- TODO: can we avoid going over the negative values?
                 for (int offset = -r; offset <= r; ++offset) {
-                    accumulator += mtx.at(offset, line);
+                    accumulator += mtx.at(offset, line, overscan_mode::repeat);
                 }
                 accumulator /= diameter;
-                mtx_to_blur.at(0, line) = accumulator;
+                mtx_to_blur.at(0, line, overscan_mode::repeat) = accumulator;
 
                 // calculate following pixel's values by subtracting left-most pixel within the radius
                 // and adding the one to the right of the right-most for each of the remaining pixels of the row
                 for (unsigned int column = 1; column < mtx.width(); ++column) {
                     accumulator = accumulator -
-                        (mtx.at(column - r - 1, line) / diameter) +
-                        (mtx.at(column + r, line) / diameter);
-                    mtx_to_blur.at(column, line) = accumulator;
+                        (mtx.at(column - r - 1, line, overscan_mode::repeat) / diameter) +
+                        (mtx.at(column + r, line, overscan_mode::repeat) / diameter);
+                    mtx_to_blur.at(column, line, overscan_mode::repeat) = accumulator;
                 }
             }
             // for every line...

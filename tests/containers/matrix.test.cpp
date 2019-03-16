@@ -102,7 +102,7 @@ TEST(Matrix, ConstAt) {
     EXPECT_EQ(0, m.at(1, 1));
 
     // check out-of-bounds access
-    EXPECT_EQ(0, m.at(2, 0));
+    EXPECT_THROW(m.at(2, 0), std::out_of_range);
     EXPECT_EQ(42, m.at(2, 0, overscan_mode::repeat));
 }
 
@@ -117,8 +117,8 @@ TEST(Matrix, At) {
     EXPECT_EQ(0, m.at(1, 1));
 
     // check out-of-bounds access
-    EXPECT_EQ(0, m.at(2, 0));
-    EXPECT_EQ(42, m.at(2, 0, overscan_mode::repeat));
+    EXPECT_THROW(m.at(2, 0), std::out_of_range);
+    EXPECT_EQ(42, m.at(3, 0, overscan_mode::repeat));
     
     // check if assigning works
     m.at(0,1) = 47;
