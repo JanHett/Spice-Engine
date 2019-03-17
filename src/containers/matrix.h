@@ -96,7 +96,7 @@ public:
                 case overscan_mode::exception:
                 {
                     throw std::out_of_range(
-                        std::string("Cannot access ") + std::to_string(p_width) + "x" + std::to_string(p_height) +
+                        "Cannot access " + std::to_string(p_width) + "x" + std::to_string(p_height) +
                         " matrix at (" + std::to_string(x) + ", " + std::to_string(y) + ")."
                     );
                 }
@@ -125,7 +125,7 @@ public:
                 case overscan_mode::exception:
                 {
                     throw std::out_of_range(
-                        std::string("Cannot access ") + std::to_string(p_width) + "x" + std::to_string(p_height) +
+                        "Cannot access " + std::to_string(p_width) + "x" + std::to_string(p_height) +
                         " matrix at (" + std::to_string(x) + ", " + std::to_string(y) + ")."
                     );
                 }
@@ -291,6 +291,7 @@ public:
         
         // creates a vector of box-blur sizes for a given standard deviation sigma
         // increasing n will approximate a true gaussian blur better but decrease performance
+        // TODO: get the box size right so a small sigma doesn't result in a massive blur radius
         auto box_sizes = [=](float sigma, unsigned int n) {
             float w_ideal = std::sqrt((12 * sigma * sigma / n) + 1);
             float wl = std::floorf(w_ideal);
@@ -328,11 +329,6 @@ public:
                     mtx_to_blur.at(column, line, overscan_mode::repeat) = accumulator;
                 }
             }
-            // for every line...
-            // calculate value for first pixel...
-            // go to next pixel - use the result from previous pixel
-            // subtract weighted pixel at data[col - r + 1] (left-most in blur of last pixel)...
-            // and add weighted pixel at data[col + r] (right most pixel in new blur that was missing from last pixel)
             return mtx_to_blur;
         };
 
@@ -377,7 +373,7 @@ inline void print_greyscale(matrix<float> const & mtx) {
             ";38;2;" <<
             static_cast<int>(std::floor(mtx.at(x, y) * 255)) << ";" <<
             static_cast<int>(std::floor(mtx.at(x, y) * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y) * 255)) << "m" << "..";
+            static_cast<int>(std::floor(mtx.at(x, y) * 255)) << "m" << "  ";
         }
         std::cout << "\033[0m" << std::endl;
     }
@@ -397,7 +393,7 @@ inline void print_color(matrix<pixel<num_channels>> const & mtx) {
             ";38;2;" <<
             static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
             static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) << "m" << "..";
+            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) << "m" << "  ";
         }
         std::cout << "\033[0m" << std::endl;
     }
