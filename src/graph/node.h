@@ -10,25 +10,44 @@
 
 #include "../file_formats/pbm.h"
 
-template <class T>
+// Tests if T is a specialization of Template
+template <typename T, template <typename...> class Template>
+struct is_specialization_of : std::false_type {};
+template <template <typename...> class Template, typename... Args>
+struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
+
+
+/**
+ * Base class for all nodes.
+ * InputTuple should be a std::tuple containing only inputs and vector<input>s.
+ * OutputTuple should be a std::tuple containing only outputs.
+ * TODO: static_assert that InputTuple and OutputTuple are correct.
+ */
+template <class InputTuple, class OutputTuple>
 class node {
+    static_assert(is_specialization_of<InputTuple, std::tuple>::value, "Inputs can only be tuples of inputs or vector<input>s");
+    static_assert(is_specialization_of<OutputTuple, std::tuple>::value, "Outputs can only be tuples of outputs or vector<output>s");
 protected:
     const std::string _type;
 
-    std::vector<input<T>> inputs;
-    std::vector<output<T>> outputs;
+    InputTuple p_inputs;
+    OutputTuple p_outputs;
 
 public:
     std::string id;
 
-    node(const char * id): id(id) {}
+    node(const char * id, InputTuple inputs = {}, OutputTuple outputs = {}):
+    id(id),
+    p_inputs(inputs),
+    p_outputs(outputs)
+    {}
 
-    std::vector<input<T>> const & get_inputs() const {
-        return inputs;
+    InputTuple const & inputs() const {
+        return p_inputs;
     }
 
-    std::vector<output<T>> const & get_outputs() const {
-        return outputs;
+    OutputTuple const & outputs() const {
+        return p_outputs;
     }
 
     /**
@@ -37,22 +56,23 @@ public:
     virtual bool apply() = 0;
 };
 
-class loader: public node<matrix<pixel<4>>> {
+class loader: public node<
+    std::tuple<>,                           // no inputs
+    std::tuple<output<matrix<pixel<4>>>>    // one output
+> {
 private:
     std::shared_ptr<matrix<pixel<4>>> data;
 public:
-    loader(const char * id): node(id) {
+    loader(const char * id): node(id, {}, {output<matrix<pixel<4>>>("Image")}) {
         // no actual data yet, but we need an empty image to point the output to to create a valid state
         data = std::make_shared<matrix<pixel<4>>>();
-        outputs.push_back(output<matrix<pixel<4>>>("Image"));
-        outputs[0].data = data;
+        std::get<0>(p_outputs).data = data;
     }
     
-    loader(const char * id, const char * path): node(id) {
+    loader(const char * id, const char * path): node(id, {}, {output<matrix<pixel<4>>>("Image")}) {
         // no need to instanciate pixel matrix out here, this is done in open()
         open(path);
-        outputs.push_back(output<matrix<pixel<4>>>("Image"));
-        outputs[0].data = data;
+        std::get<0>(p_outputs).data = data;
     }
 
     /**
@@ -79,7 +99,7 @@ public:
     }
 };
 
-class convolution: public node<matrix<pixel<4>>> {
+/* class convolution: public node<matrix<pixel<4>>> {
 private:
     std::shared_ptr<matrix<pixel<4>>> data;
     std::shared_ptr<matrix<pixel<4>>> convolution_matrix;
@@ -97,6 +117,6 @@ public:
         outputs.push_back(output<matrix<pixel<4>>>("Image"));
         outputs[0].data = data;
     }
-};
+}; */
 
 #endif // SPICE_NODE

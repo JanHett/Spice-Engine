@@ -1,34 +1,34 @@
 #include <gtest/gtest.h>
 
-#include <iostream>
+#include <tuple>
 
 #include "../../src/graph/node.h"
 
-TEST(Node, get_outputs) {
+TEST(Node, outputs) {
 	loader l("test");
 
-	auto& outs = l.get_outputs();
+	auto& outs = l.outputs();
 	static_assert(
 		std::is_const<std::remove_reference<decltype(outs)>::type>::value,
-		"Node::get_outputs() is returning non-const vector"
+		"Node::outputs() is returning non-const tuple"
 	);
 	// std::cout << outs[0].data << std::endl;
-	EXPECT_EQ(1, outs.size());
-	EXPECT_NE(nullptr, outs[0].data);
+	EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
+	EXPECT_NE(nullptr, std::get<0>(outs).data);
 }
 
 TEST(loader, ConstructorEmpty) {
 	loader l("MyLoader");
 
-	EXPECT_NE(nullptr, l.get_outputs()[0].data);
-	EXPECT_EQ(0.0f, l.get_outputs()[0].data->data[0][0]);
+	EXPECT_NE(nullptr, std::get<0>(l.outputs()).data);
+	EXPECT_EQ(0.0f, std::get<0>(l.outputs()).data->data[0][0]);
 }
 
 TEST(Loader, ConstructorWithPathPBM) {
     loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
 
 	// should be a 3x3 checker pattern
-	auto img = l.get_outputs()[0].data;
+	auto img = std::get<0>(l.outputs()).data;
 	EXPECT_EQ(3, img->width());
 	EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {
@@ -41,7 +41,7 @@ TEST(Loader, OpenPBM) {
     l.open("../tests/_data/checker_3x3.pbm");
 
 	// should be a 3x3 checker pattern
-    auto img = l.get_outputs()[0].data;
+    auto img = std::get<0>(l.outputs()).data;
 	EXPECT_EQ(3, img->width());
 	EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {
