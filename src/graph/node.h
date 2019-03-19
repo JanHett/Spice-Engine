@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "node_io.h"
-#include "../containers/matrix.h"
+#include "../containers/image.h"
 #include "../containers/pixel.h"
 
 #include "../file_formats/pbm.h"
@@ -21,7 +21,7 @@ struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
  * Base class for all nodes.
  * InputTuple should be a std::tuple containing only inputs and vector<input>s.
  * OutputTuple should be a std::tuple containing only outputs.
- * TODO: static_assert that InputTuple and OutputTuple are correct.
+ * TODO: static_assert that InputTuple and OutputTuple conatain the correct types.
  */
 template <class InputTuple, class OutputTuple>
 class node {
@@ -42,12 +42,22 @@ public:
     p_outputs(outputs)
     {}
 
-    InputTuple const & inputs() const {
+    constexpr InputTuple const & inputs() const {
         return p_inputs;
     }
 
-    OutputTuple const & outputs() const {
+    template<unsigned int index>
+    constexpr auto const & inputs() const {
+        return std::get<index>(p_inputs);
+    }
+
+    constexpr OutputTuple const & outputs() const {
         return p_outputs;
+    }
+
+    template<unsigned int index>
+    constexpr auto const & outputs() const {
+        return std::get<index>(p_outputs);
     }
 
     /**
@@ -58,18 +68,18 @@ public:
 
 class loader: public node<
     std::tuple<>,                           // no inputs
-    std::tuple<output<matrix<pixel<4>>>>    // one output
+    std::tuple<output<rgb_image>>    // one output
 > {
 private:
-    std::shared_ptr<matrix<pixel<4>>> data;
+    std::shared_ptr<rgb_image> data;
 public:
-    loader(const char * id): node(id, {}, {output<matrix<pixel<4>>>("Image")}) {
+    loader(const char * id): node(id, {}, {output<rgb_image>("Image")}) {
         // no actual data yet, but we need an empty image to point the output to to create a valid state
-        data = std::make_shared<matrix<pixel<4>>>();
+        data = std::make_shared<rgb_image>();
         std::get<0>(p_outputs).data = data;
     }
     
-    loader(const char * id, const char * path): node(id, {}, {output<matrix<pixel<4>>>("Image")}) {
+    loader(const char * id, const char * path): node(id, {}, {output<rgb_image>("Image")}) {
         // no need to instanciate pixel matrix out here, this is done in open()
         open(path);
         std::get<0>(p_outputs).data = data;
@@ -80,9 +90,9 @@ public:
      */
     bool open(const char * path) {
         try {
-            auto m = ppm(path).to_pixel_matrix<4>();
+            auto m = ppm(path).to_pixel_matrix<3>();
             // if there is not yet a data matrix, create one for this image
-            if (data == nullptr) data = std::make_shared<matrix<pixel<4>>>(m);
+            if (data == nullptr) data = std::make_shared<rgb_image>(m);
             else *data = m;
         } catch (char const * err) {
             fprintf(stderr, "%s\n", err);
@@ -99,22 +109,62 @@ public:
     }
 };
 
-/* class convolution: public node<matrix<pixel<4>>> {
+class fast_blur: public node<
+    std::tuple<input<rgb_image>, input<float>, input<unsigned int>>,
+    std::tuple<output<rgb_image>>
+> {
 private:
-    std::shared_ptr<matrix<pixel<4>>> data;
-    std::shared_ptr<matrix<pixel<4>>> convolution_matrix;
+    // aliases for in-/outputs contained in tuples
+    input<rgb_image>& in_image;
+    input<float>& ctrl_radius;
+    input<unsigned int>& ctrl_passes;
+    output<rgb_image>& out_image;
+
+    std::shared_ptr<rgb_image> data;
+public:
+    fast_blur(const char * id):
+    node(
+        id,
+        { // inputs
+            input<rgb_image>("Image"),
+            input<float>("Radius"),
+            input<unsigned int>("Passes")
+        }, { // outputs
+            output<rgb_image>("Image")
+        }
+    ),
+    // in-/output aliases
+    in_image(std::get<0>(p_inputs)),
+    ctrl_radius(std::get<1>(p_inputs)),
+    ctrl_passes(std::get<2>(p_inputs)),
+    out_image(std::get<0>(p_outputs))
+    {
+        *data = in_image.data.lock()->fast_blur(*ctrl_radius.data.lock(), *ctrl_passes.data.lock());
+        out_image.data = data;
+    }
+
+    bool apply() {
+        *data = data->fast_blur(*ctrl_radius.data.lock(), *ctrl_passes.data.lock());
+        return false;
+    }
+};
+
+/* class convolution: public node<rgb_image> {
+private:
+    std::shared_ptr<rgb_image> data;
+    std::shared_ptr<rgb_image> convolution_matrix;
 
 public:
     convolution(const char * id): node(id) {
         // no actual data yet, but we need an empty image to point the output to to create a valid state
-        data = std::make_shared<matrix<pixel<4>>>();
+        data = std::make_shared<rgb_image>();
         // 
-        inputs.push_back(input<matrix<pixel<4>>>("Image"));
+        inputs.push_back(input<rgb_image>("Image"));
         data = inputs[0].data.lock();
-        inputs.push_back(input<matrix<pixel<4>>>("Convolution Matrix"));
+        inputs.push_back(input<rgb_image>("Convolution Matrix"));
         convolution_matrix = inputs[1].data.lock();
 
-        outputs.push_back(output<matrix<pixel<4>>>("Image"));
+        outputs.push_back(output<rgb_image>("Image"));
         outputs[0].data = data;
     }
 }; */

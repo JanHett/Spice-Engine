@@ -11,7 +11,24 @@ A node graph. If at least one in- or output is exposed, the recipe can be refere
 
 ### Node
 
-A filter, transform or other modification to be applied to zero or more data structures, resulting in zero or more data structures. Data flows in and out through a potentially variable number of in- and outputs.
+A filter, transform or other modification to be applied to zero or more data structures, resulting in zero or more data structures. Data flows in and out through a fixed number of in- and outputs. Some inputs might accept multiple sources (they are represented as a vector of outputs).
+
+#### States of a node
+
+```mermaid
+graph TD;
+
+missing(START)-->|create|orphaned
+
+orphaned-->|"connect output(s)"|invalid
+orphaned-->|"connect input(s)"|ready
+invalid-->|"connect input(s)"|applying
+ready-->|"connect output(s)"|applying
+applying-->|applied|cached
+cached-->|"input changed"|applying
+```
+
+Connect/create transitions can be traversed in reverse direction with the inverse action (disconnect/delete).
 
 ### Input
 
@@ -25,9 +42,21 @@ Product of a node. Can be fed to an input of compatible type or exposed as the p
 
 Abstract, two dimensional set of values.
 
-### Image: Matrix<Pixel<4>>
+### Image
 
-A specification of the `matrix` class exposing additional image specific operations.
+A collection of aliases for specialisations of the `matrix` class.
+
+There are various types of images, used for various purposes (mostly to distinguish between the meaning of the different channels):
+
+```c++
+using rgb_image		= matrix<pixel<3>>
+using rgba_image	= matrix<pixel<4>>
+using a_image			= matrix<pixel<1>>
+using cmyk_image	= matrix<pixel<4>>
+using cmyka_image	= matrix<pixel<5>>
+```
+
+The most used one is the `rgb_image` - Spice works in RGB space and all nodes working with an alpha channel use a seperate input of type `a_image` for it.
 
 ### Primitives
 
