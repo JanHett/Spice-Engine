@@ -64,6 +64,35 @@ DataSink["Data Sink*: cached"]
 E-->G["G: orphaned<br/>(has 2 required<br/>inputs)"]
 ```
 
+
+
+// WIP: state flags, node change events and consequences
+
+```c++
+class enum dag_state {
+  computed_subtree;
+  input_missing;
+};
+```
+
+
+
+- i/o connected
+  - Clear `dag_state::computed_subtree` flag on all nodes
+  - Reverse traverse from all data sinks and tag all encountered nodes `dag_state::computed_subtree`
+  - Check if node receiving the input now has all necessary inputs and remove flag `dag_state::input_missing` if applicable
+  - If no inputs are missing and the node is within the computed subtree, apply the operation and propagate the change through the tree by forward traversal
+- i/o disconnected
+  - If now-disconnected input is required by the owning node:
+    - set flag `dag_state::input_missing` on the owner
+    - forward traverse DAG from owner of the now-disconnected input and set `dag_state::input_missing` on all nodes that are part of this particular branch via a required input
+    - clear `dag_state::computed_subtree` on all nodes
+    - reverse traverse from all data sinks and set `dag_state::computed_subtree` on encountered nodes
+  - Else:
+    - Re-appy the operation and notify consumers of this node's output if the output value has changed
+
+
+
 ### Input
 
 Potentially optional data source for a node. Specifying values for both optional and obligatory nodes can be deferred to the parent recipe. Deferring value specification does not imply the absence of a value (e.g. one might be provided for preview purposes or as a default).
