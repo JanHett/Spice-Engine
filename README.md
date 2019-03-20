@@ -15,20 +15,54 @@ A filter, transform or other modification to be applied to zero or more data str
 
 #### States of a node
 
+A node may have several required and optional inputs. It cannot execute its operation if the required inputs are not supplied.
+
+To save resources, only nodes that are part of a sub-graph that terminates in a data sink (e.g. a viewer or file output) are computed.
+
+A node can have the following states:
+
+- orphaned
+- invalid
+- ready
+- applying
+- cached
+
+States can be changed as follows
+
 ```mermaid
-graph TD;
+graph LR;
 
-missing(START)-->|create|orphaned
+missing{START}-->|create|orphaned
 
-orphaned-->|"connect output(s)"|invalid
+orphaned-->|"connect output(s)"|outIsDataSink{"Connects</br>to Data</br>Sink?"}
+outIsDataSink-->|yes|invalid
+outIsDataSink-->|no|orphaned
 orphaned-->|"connect input(s)"|ready
 invalid-->|"connect input(s)"|applying
-ready-->|"connect output(s)"|applying
+ready-->|"connect output(s)"|outIsDataSink2{"Connects</br>to Data</br>Sink?"}
+outIsDataSink2-->|yes|applying
+outIsDataSink2-->|no|ready
 applying-->|applied|cached
-cached-->|"input changed"|applying
+cached-->|"change/connect input(s)"|applying
 ```
 
 Connect/create transitions can be traversed in reverse direction with the inverse action (disconnect/delete).
+
+Thus, in the following graph, only nodes marked with an asterisk would be applied if an input above them changed.
+
+```mermaid
+graph TD;
+
+A[A: orphaned]
+
+B[B: orphaned]-->C[C: ready]
+
+D[D*: cached]-->F[F*: cached]
+E[E*: cached]-->F
+F-->DataSink
+DataSink["Data Sink*: cached"]
+E-->G["G: orphaned<br/>(has 2 required<br/>inputs)"]
+```
 
 ### Input
 

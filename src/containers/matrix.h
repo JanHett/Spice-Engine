@@ -309,7 +309,7 @@ public:
 
         auto horizontal_blur = [=](matrix<T> const & mtx, float radius) {
             auto mtx_to_blur = mtx;
-            auto r = static_cast<int>(std::round(radius));
+            auto r = std::round(radius);
             auto diameter = r + r + 1;
             for (unsigned int line = 0; line < mtx.height(); ++line) {
                 T accumulator{};

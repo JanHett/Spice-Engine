@@ -248,6 +248,11 @@ TEST(Pixel, OperatorDivideEquals) {
 	EXPECT_EQ(0.5, pxl2[0]);
 	EXPECT_EQ(0.25, pxl2[1]);
 	EXPECT_EQ(0.125, pxl2[2]);
+
+	pxl2 /= 0.5;
+	EXPECT_EQ(1, pxl2[0]);
+	EXPECT_EQ(0.5, pxl2[1]);
+	EXPECT_EQ(0.25, pxl2[2]);
 }
 
 TEST(Pixel, OperatorDivide) {
@@ -262,6 +267,15 @@ TEST(Pixel, OperatorDivide) {
 	EXPECT_EQ(0.5, pxl1[0]);
 	EXPECT_EQ(0.5, pxl1[1]);
 	EXPECT_EQ(0.5, pxl1[2]);
+
+	EXPECT_EQ(0.5, pxl2[0]);
+	EXPECT_EQ(0.25, pxl2[1]);
+	EXPECT_EQ(0.125, pxl2[2]);
+
+	pixel pxl_result_div_float = pxl2 / 0.5;
+	EXPECT_EQ(1, pxl_result_div_float[0]);
+	EXPECT_EQ(0.5, pxl_result_div_float[1]);
+	EXPECT_EQ(0.25, pxl_result_div_float[2]);
 
 	EXPECT_EQ(0.5, pxl2[0]);
 	EXPECT_EQ(0.25, pxl2[1]);

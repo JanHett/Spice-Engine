@@ -89,7 +89,19 @@ public:
         return *this;
     }
 
+    pixel<num_channels>& operator/=(float rhs) {
+        for (unsigned int i = 0; i < data.size(); ++i) {
+            data[i] /= rhs;
+        }
+        return *this;
+    }
+
     friend pixel operator/(pixel lhs, const pixel& rhs) {
+        lhs /= rhs;
+        return lhs;
+    }
+
+    friend pixel operator/(pixel lhs, float rhs) {
         lhs /= rhs;
         return lhs;
     }
