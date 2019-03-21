@@ -89,7 +89,7 @@ class enum dag_state {
     - clear `dag_state::computed_subtree` on all nodes
     - reverse traverse from all data sinks and set `dag_state::computed_subtree` on encountered nodes
   - Else:
-    - Re-appy the operation and notify consumers of this node's output if the output value has changed
+    - Re-apply the operation with new (= reduced) input data and notify consumers of this node's output if the output value has changed
 
 
 

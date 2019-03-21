@@ -16,6 +16,20 @@ struct is_specialization_of : std::false_type {};
 template <template <typename...> class Template, typename... Args>
 struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
 
+enum class node_state: uint8_t {
+    clear               = 0,
+    computed_subgraph   = 1,        // the node is connected to a data sink, thus part of the computed subtree
+    input_missing       = 1 << 1    // the node is missing a required input
+};
+
+class primitive_node {
+public:
+    std::string id;
+
+    primitive_node(const char * id):
+    id(id)
+    {}
+};
 
 /**
  * Base class for all nodes.
@@ -24,7 +38,7 @@ struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
  * TODO: static_assert that InputTuple and OutputTuple conatain the correct types.
  */
 template <class InputTuple, class OutputTuple>
-class node {
+class node: public primitive_node {
     static_assert(is_specialization_of<InputTuple, std::tuple>::value, "Inputs can only be tuples of inputs or vector<input>s");
     static_assert(is_specialization_of<OutputTuple, std::tuple>::value, "Outputs can only be tuples of outputs or vector<output>s");
 protected:
@@ -37,9 +51,7 @@ public:
     std::string id;
 
     node(const char * id, InputTuple inputs = {}, OutputTuple outputs = {}):
-    id(id),
-    p_inputs(inputs),
-    p_outputs(outputs)
+    primitive_node(id)
     {}
 
     constexpr InputTuple const & inputs() const {
@@ -59,15 +71,10 @@ public:
     constexpr auto const & outputs() const {
         return std::get<index>(p_outputs);
     }
-
-    /**
-     * Apply the node's filter.
-     */
-    virtual bool apply() = 0;
 };
 
 class loader: public node<
-    std::tuple<>,                           // no inputs
+    std::tuple<>,                    // no inputs
     std::tuple<output<rgb_image>>    // one output
 > {
 private:
@@ -99,13 +106,6 @@ public:
             return false;
         }
         return true;
-    }
-
-    /**
-     * Reloads the source file.
-     */
-    bool apply() {
-        return false;
     }
 };
 
