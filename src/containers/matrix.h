@@ -379,7 +379,7 @@ inline void print_greyscale(matrix<float> const & mtx) {
     }
 }
 
-template<int num_channels = 3>
+template<unsigned int num_channels = 3>
 inline void print_color(matrix<pixel<num_channels>> const & mtx) {
     // \033[48;2;<r>;<g>;<b>m
     for (unsigned int y = 0; y < mtx.height(); ++y) {

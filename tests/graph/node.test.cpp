@@ -61,8 +61,14 @@ TEST(node__loader, OpenPBM) {
     }
 }
 
-TEST(node__fast_blur, ConstructorEmpty) {
+/* TEST(node__out_stream, constructor) {
+    loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
+    out_stream os_node("MyOutStream");
+    os_node.inputs<0>().connect(l.outputs<0>());
+} */
+
+/* TEST(node__fast_blur, ConstructorEmpty) {
     fast_blur fb("MyBlur");
 
     // check that data is nullptr
-}
+} */

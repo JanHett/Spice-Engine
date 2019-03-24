@@ -22,12 +22,14 @@ enum class node_state: uint8_t {
     input_missing       = 1 << 1    // the node is missing a required input
 };
 
-class primitive_node {
+class basic_node {
 public:
     std::string id;
+    const bool is_data_sink;    // TODO: make this contexpr
 
-    primitive_node(const char * id):
-    id(id)
+    basic_node(const char * id, const bool is_data_sink = false):
+    id(id),
+    is_data_sink(is_data_sink)
     {}
 };
 
@@ -37,8 +39,8 @@ public:
  * OutputTuple should be a std::tuple containing only outputs.
  * TODO: static_assert that InputTuple and OutputTuple conatain the correct types.
  */
-template <class InputTuple, class OutputTuple>
-class node: public primitive_node {
+template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
+class node: public basic_node {
     static_assert(is_specialization_of<InputTuple, std::tuple>::value, "Inputs can only be tuples of inputs or vector<input>s");
     static_assert(is_specialization_of<OutputTuple, std::tuple>::value, "Outputs can only be tuples of outputs or vector<output>s");
 protected:
@@ -51,7 +53,7 @@ public:
     std::string id;
 
     node(const char * id, InputTuple inputs = {}, OutputTuple outputs = {}):
-    primitive_node(id)
+    basic_node(id, is_data_sink_t)
     {}
 
     constexpr InputTuple const & inputs() const {
@@ -69,6 +71,27 @@ public:
 
     template<unsigned int index>
     constexpr auto const & outputs() const {
+        return std::get<index>(p_outputs);
+    }
+
+    // non-const versions of above getters
+    // TODO: find a way to keep vectors const while elements are non-const
+
+    constexpr InputTuple const & inputs() {
+        return p_inputs;
+    }
+
+    template<unsigned int index>
+    constexpr auto const & inputs() {
+        return std::get<index>(p_inputs);
+    }
+
+    constexpr OutputTuple const & outputs() {
+        return p_outputs;
+    }
+
+    template<unsigned int index>
+    constexpr auto const & outputs() {
         return std::get<index>(p_outputs);
     }
 };
@@ -146,6 +169,33 @@ public:
     bool apply() {
         *data = data->fast_blur(*ctrl_radius.data.lock(), *ctrl_passes.data.lock());
         return false;
+    }
+};
+
+class out_stream: public node<
+    std::tuple<input<rgb_image>>,
+    std::tuple<>,
+    true
+> {
+private:
+    std::ostream & p_stream;
+
+    std::shared_ptr<rgb_image> data;
+public:
+    out_stream(const char * id, std::ostream & stream = std::cout):
+    node(
+        id,
+        { input<rgb_image>("Image") },
+        {}
+    ),
+    p_stream(stream),
+    data(std::get<0>(p_inputs).data.lock())
+    {
+    }
+
+    bool apply() {
+        print_color(*data);
+        return true;
     }
 };
 
