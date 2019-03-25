@@ -14,7 +14,7 @@ TEST(node, outputsConst) {
     );
     // std::cout << outs[0].data << std::endl;
     EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
-    EXPECT_EQ(nullptr, std::get<0>(outs).data);
+    EXPECT_EQ(nullptr, std::get<0>(outs).data.lock());
 }
 
 TEST(node, outputsAtIndexConst) {
@@ -26,7 +26,7 @@ TEST(node, outputsAtIndexConst) {
         "node::outputs<0>() is returning non-const input"
     );
     EXPECT_EQ(&std::get<0>(l.outputs()), &out);
-    EXPECT_EQ(nullptr, out.data);
+    EXPECT_EQ(nullptr, out.data.lock());
 }
 
 TEST(node, inputsConst) {
@@ -58,7 +58,7 @@ TEST(node, outputs) {
 
     auto& outs = l.outputs();
     EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
-    EXPECT_EQ(nullptr, std::get<0>(outs).data);
+    EXPECT_EQ(nullptr, std::get<0>(outs).data.lock());
 }
 
 TEST(node, outputsAtIndex) {
@@ -66,7 +66,7 @@ TEST(node, outputsAtIndex) {
 
     auto& out = l.outputs<0>();
     EXPECT_EQ(&std::get<0>(l.outputs()), &out);
-    EXPECT_EQ(nullptr, out.data);
+    EXPECT_EQ(nullptr, out.data.lock());
 }
 
 TEST(node, inputs) {
@@ -88,14 +88,14 @@ TEST(node, inputsAtIndex) {
 TEST(node__loader, ConstructorEmpty) {
     loader l("MyLoader");
 
-    EXPECT_EQ(nullptr, l.outputs<0>().data);
+    EXPECT_EQ(nullptr, l.outputs<0>().data.lock());
 }
 
 TEST(node__loader, ConstructorWithPathPBM) {
     loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
 
     // should be a 3x3 checker pattern
-    auto img = l.outputs<0>().data;
+    auto img = l.outputs<0>().data.lock();
     EXPECT_EQ(3, img->width());
     EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {
@@ -108,7 +108,7 @@ TEST(node__loader, OpenPBM) {
     l.open("../tests/_data/checker_3x3.pbm");
 
     // should be a 3x3 checker pattern
-    auto img = l.outputs<0>().data;
+    auto img = l.outputs<0>().data.lock();
     EXPECT_EQ(3, img->width());
     EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {

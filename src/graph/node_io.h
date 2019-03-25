@@ -17,16 +17,16 @@ private:
     /**
      * The part of input::connect() that doesn't interact with output
      */
-    void _connect(const std::shared_ptr<output<T>> source) {
-        this->source = source;
-        data = source->data;
+    void _connect(output<T> & source) {
+        this->source = &source;
+        data = source.data;
     }
 
     /**
      * The part of input::disconnect() that doesn't interact with output
      */
     void _disconnect() {
-        source.reset();
+        source = nullptr;
         data.reset();
     }
 
@@ -34,29 +34,30 @@ public:
     std::string label;
     // TODO: make these private
     std::weak_ptr<T> data; // this is undefined after construction
-    std::weak_ptr<output<T>> source;
+    output<T> * source = nullptr;
 
     input() = default;
     input(const std::string label): label(label) {}
+    ~input() { if (source != nullptr) source->_disconnect(*this); }
 
     /**
      * Hooks this input up to a source.
      */
-    void connect(std::shared_ptr<output<T>> source) {
+    void connect(output<T> & source) {
         _connect(source);
-        source->_connect(this->shared_from_this());
+        source._connect(*this);
     }
 
     /**
      * Breaks the link with this input's source.
      */
     void disconnect() {
-        source.lock()->_disconnect(this->shared_from_this());
+        source->_disconnect(*this);
         _disconnect();
     }
 
-    const std::shared_ptr<output<T>> get_source() {
-        return source.lock();
+    output<T> * const get_source() {
+        return source;
     }
 };
 
@@ -69,16 +70,16 @@ private:
     /**
      * The part of output::connect() that doesn't interact with input
      */
-    void _connect(const std::shared_ptr<input<T>> consumer) {
-        consumers.push_back(consumer);
+    void _connect(input<T> & consumer) {
+        consumers.push_back(&consumer);
     }
 
     /**
      * The part of output::disconnect() that doesn't interact with input
      */
-    void _disconnect(std::shared_ptr<input<T>> consumer) {
+    void _disconnect(input<T> & consumer) {
         for (auto it = consumers.begin(); it != consumers.end(); ) {
-            if (it->lock() == consumer) {
+            if (*it == &consumer) {
                 consumers.erase(it);
                 return;
             } else ++it;
@@ -88,26 +89,32 @@ private:
 public:
     std::string label;
     // TODO: make these private
-    std::shared_ptr<T> data; // this is undefined after construction
-    std::vector<std::weak_ptr<input<T>>> consumers;
+    std::weak_ptr<T> data; // this is undefined after construction
+    std::vector<input<T> *> consumers;
 
     output() = default;
     output(const std::string label): label(label) {}
 
+    ~output() {
+        for (auto consumer: consumers) {
+            consumer->_disconnect();
+        }
+    }
+
     /**
      * Adds an input that will consume data from this output.
      */
-    void connect(std::shared_ptr<input<T>> consumer) {
+    void connect(input<T> & consumer) {
         _connect(consumer);
-        consumer->_connect(this->shared_from_this());
+        consumer._connect(*this);
     }
 
     /**
      * Removes a consumer from this output.
      */
-    void disconnect(std::shared_ptr<input<T>> consumer) {
+    void disconnect(input<T> & consumer) {
         _disconnect(consumer);
-        consumer->disconnect();
+        consumer._disconnect();
     }
 };
 

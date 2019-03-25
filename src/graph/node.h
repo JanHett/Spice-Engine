@@ -41,8 +41,10 @@ public:
  */
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
 class node: public basic_node {
-    static_assert(is_specialization_of<InputTuple, std::tuple>::value, "Inputs can only be tuples of inputs or vector<input>s");
-    static_assert(is_specialization_of<OutputTuple, std::tuple>::value, "Outputs can only be tuples of outputs or vector<output>s");
+    static_assert(is_specialization_of<InputTuple, std::tuple>::value,
+        "Inputs can only be tuples of shared_ptr<inputs> or vector<shared_ptr<input>>s.");
+    static_assert(is_specialization_of<OutputTuple, std::tuple>::value,
+        "Outputs can only be tuples of outputs.");
 protected:
     const std::string _type;
 
@@ -109,16 +111,14 @@ class loader: public node<
 private:
     std::shared_ptr<rgb_image> data;
 public:
-    loader(const char * id): node(id, {}, {output<rgb_image>("Image")}) {
-        // no actual data yet, but we need an empty image to point the output to to create a valid state
-        data = nullptr;
-        std::get<0>(p_outputs).data = data;
+    loader(const char * id):
+    node(id, {}, {output<rgb_image>("Image")}),
+    data(nullptr)
+    {
     }
     
     loader(const char * id, const char * path): node(id, {}, {output<rgb_image>("Image")}) {
-        // no need to instanciate pixel matrix out here, this is done in open()
         open(path);
-        std::get<0>(p_outputs).data = data;
     }
 
     /**
@@ -128,7 +128,10 @@ public:
         try {
             auto m = ppm(path).to_pixel_matrix<3>();
             // if there is not yet a data matrix, create one for this image
-            if (data == nullptr) data = std::make_shared<rgb_image>(m);
+            if (data == nullptr) {
+                data = std::make_shared<rgb_image>(m);
+                std::get<0>(p_outputs).data = data;
+            }
             else *data = m;
         } catch (char const * err) {
             fprintf(stderr, "%s\n", err);
