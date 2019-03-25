@@ -190,6 +190,12 @@ private:
     std::ostream & p_stream;
 
     std::shared_ptr<rgb_image> data;
+
+    std::function<void(std::weak_ptr<rgb_image>)> p_on_input_updated = [&](std::weak_ptr<rgb_image> new_img) {
+        std::cout << "Input data changed. ";
+        data = new_img.lock();
+        std::cout << "New image is at " << data << "\n";
+    };
 public:
     out_stream(const char * id, std::ostream & stream = std::cout):
     node(
@@ -200,7 +206,10 @@ public:
     p_stream(stream),
     data(std::get<0>(p_inputs).data.lock())
     {
+        inputs<0>().subscribe(p_on_input_updated);
     }
+
+    auto _data() { return data; }
 
     bool apply() {
         print_color(*data);

@@ -116,11 +116,16 @@ TEST(node__loader, OpenPBM) {
     }
 }
 
-/* TEST(node__out_stream, constructor) {
+TEST(node__out_stream, constructor) {
     loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
     out_stream os_node("MyOutStream");
     os_node.inputs<0>().connect(l.outputs<0>());
-} */
+
+    l.outputs<0>().data.lock()->print();
+    std::cout << os_node._data();
+
+    // os_node.apply();
+}
 
 /* TEST(node__fast_blur, ConstructorEmpty) {
     fast_blur fb("MyBlur");

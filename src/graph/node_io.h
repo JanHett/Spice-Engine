@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <functional>
+#include <iostream>
 
 template <class T>
 class output;
@@ -14,21 +16,31 @@ private:
     template <class fT>
     friend class output;
 
+    std::vector<std::function<void(std::weak_ptr<T>)> * > p_subscribers;
+
     /**
      * The part of input::connect() that doesn't interact with output
      */
-    void _connect(output<T> & source) {
+    void p_connect(output<T> & source) {
         this->source = &source;
         data = source.data;
+        std::cout << "input data is now " << data.lock() << "\n";
+        source.subscribe(p_on_data_updated);
     }
 
     /**
      * The part of input::disconnect() that doesn't interact with output
      */
-    void _disconnect() {
+    void p_disconnect() {
+        source->unsubscribe(p_on_data_updated);
         source = nullptr;
         data.reset();
     }
+
+    /** callback to be handed to connected output */
+    std::function<void(std::weak_ptr<T>)> p_on_data_updated = [&](std::weak_ptr<T> new_data) {
+        data = new_data;
+    };
 
 public:
     std::string label;
@@ -38,26 +50,40 @@ public:
 
     input() = default;
     input(const std::string label): label(label) {}
-    ~input() { if (source != nullptr) source->_disconnect(*this); }
+    ~input() { if (source != nullptr) source->p_disconnect(*this); }
 
     /**
      * Hooks this input up to a source.
      */
     void connect(output<T> & source) {
-        _connect(source);
-        source._connect(*this);
+        p_connect(source);
+        source.p_connect(*this);
     }
 
     /**
      * Breaks the link with this input's source.
      */
     void disconnect() {
-        source->_disconnect(*this);
-        _disconnect();
+        source->p_disconnect(*this);
+        p_disconnect();
     }
 
     output<T> * const get_source() {
         return source;
+    }
+
+    /**
+     * Registers an event listener to be called when the data
+     * transported by this output has changed.
+     */
+    void subscribe(std::function<void(std::weak_ptr<T>)> & callback) {
+        callback(data);
+        p_subscribers.push_back(&callback);
+    }
+
+    void unsubscribe(std::function<void(std::weak_ptr<T>)> & callback) {
+        auto cb_to_remove = std::find(p_subscribers.begin(), p_subscribers.end(), &callback);
+        if (cb_to_remove != p_subscribers.end()) p_subscribers.erase(cb_to_remove);
     }
 };
 
@@ -67,23 +93,21 @@ private:
     template <class fT>
     friend class input;
 
+    std::vector<std::function<void(std::weak_ptr<T>)> *> p_subscribers {};
+
     /**
      * The part of output::connect() that doesn't interact with input
      */
-    void _connect(input<T> & consumer) {
+    void p_connect(input<T> & consumer) {
         consumers.push_back(&consumer);
     }
 
     /**
      * The part of output::disconnect() that doesn't interact with input
      */
-    void _disconnect(input<T> & consumer) {
-        for (auto it = consumers.begin(); it != consumers.end(); ) {
-            if (*it == &consumer) {
-                consumers.erase(it);
-                return;
-            } else ++it;
-        }
+    void p_disconnect(input<T> & consumer) {
+        auto consumer_to_remove = std::find(consumers.begin(), consumers.end(), &consumer);
+        if (consumer_to_remove != consumers.end()) consumers.erase(consumer_to_remove);
     }
 
 public:
@@ -97,7 +121,7 @@ public:
 
     ~output() {
         for (auto consumer: consumers) {
-            consumer->_disconnect();
+            consumer->p_disconnect();
         }
     }
 
@@ -105,16 +129,38 @@ public:
      * Adds an input that will consume data from this output.
      */
     void connect(input<T> & consumer) {
-        _connect(consumer);
-        consumer._connect(*this);
+        p_connect(consumer);
+        consumer.p_connect(*this);
     }
 
     /**
      * Removes a consumer from this output.
      */
     void disconnect(input<T> & consumer) {
-        _disconnect(consumer);
-        consumer._disconnect();
+        p_disconnect(consumer);
+        consumer.p_disconnect();
+    }
+
+    /**
+     * Registers an event listener to be called when the data
+     * transported by this output has changed.
+     */
+    void subscribe(std::function<void(std::weak_ptr<T>)> & callback) {
+        callback(data);
+        p_subscribers.push_back(&callback);
+    }
+
+    void unsubscribe(std::function<void(std::weak_ptr<T>)> & callback) {
+        auto cb_to_remove = std::find(p_subscribers.begin(), p_subscribers.end(), &callback);
+        if (cb_to_remove != p_subscribers.end()) p_subscribers.erase(cb_to_remove);
+    }
+
+    /**
+     * Calls all subscribers, passing them the current state of data.
+     */
+    void publish() const {
+        for (auto cb: p_subscribers)
+            cb(data);
     }
 };
 
