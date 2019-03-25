@@ -4,36 +4,91 @@
 
 #include "../../src/graph/node.h"
 
-TEST(node, outputs) {
-    loader l("test");
+TEST(node, outputsConst) {
+    const loader l("test");
 
-    auto& outs = l.outputs();
+    auto const & outs = l.outputs();
     static_assert(
         std::is_const<std::remove_reference<decltype(outs)>::type>::value,
         "node::outputs() is returning non-const tuple"
     );
     // std::cout << outs[0].data << std::endl;
     EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
-    EXPECT_NE(nullptr, std::get<0>(outs).data);
+    EXPECT_EQ(nullptr, std::get<0>(outs).data);
+}
+
+TEST(node, outputsAtIndexConst) {
+    const loader l("test");
+
+    auto const & out = l.outputs<0>();
+    static_assert(
+        std::is_const<std::remove_reference<decltype(out)>::type>::value,
+        "node::outputs<0>() is returning non-const input"
+    );
+    EXPECT_EQ(&std::get<0>(l.outputs()), &out);
+    EXPECT_EQ(nullptr, out.data);
+}
+
+TEST(node, inputsConst) {
+    const out_stream l("test");
+
+    auto const & ins = l.inputs();
+    static_assert(
+        std::is_const<std::remove_reference<decltype(ins)>::type>::value,
+        "node::inputs() is returning non-const tuple"
+    );
+    EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
+    EXPECT_EQ(nullptr, std::get<0>(ins).data.lock());
+}
+
+TEST(node, inputsAtIndexConst) {
+    const out_stream l("test");
+
+    auto const & in = l.inputs<0>();
+    static_assert(
+        std::is_const<std::remove_reference<decltype(in)>::type>::value,
+        "node::inputs<0>() is returning non-const input"
+    );
+    EXPECT_EQ(&std::get<0>(l.inputs()), &in);
+    EXPECT_EQ(nullptr, in.data.lock());
+}
+
+TEST(node, outputs) {
+    loader l("test");
+
+    auto& outs = l.outputs();
+    EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
+    EXPECT_EQ(nullptr, std::get<0>(outs).data);
 }
 
 TEST(node, outputsAtIndex) {
     loader l("test");
 
     auto& out = l.outputs<0>();
-    static_assert(
-        std::is_const<std::remove_reference<decltype(out)>::type>::value,
-        "node::outputs<0>() is returning non-const input"
-    );
     EXPECT_EQ(&std::get<0>(l.outputs()), &out);
-    EXPECT_NE(nullptr, out.data);
+    EXPECT_EQ(nullptr, out.data);
+}
+
+TEST(node, inputs) {
+    out_stream l("test");
+
+    auto& ins = l.inputs();
+    EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
+    EXPECT_EQ(nullptr, std::get<0>(ins).data.lock());
+}
+
+TEST(node, inputsAtIndex) {
+    out_stream l("test");
+
+    auto& in = l.inputs<0>();
+    EXPECT_EQ(&std::get<0>(l.inputs()), &in);
+    EXPECT_EQ(nullptr, in.data.lock());
 }
 
 TEST(node__loader, ConstructorEmpty) {
     loader l("MyLoader");
 
-    EXPECT_NE(nullptr, l.outputs<0>().data);
-    EXPECT_EQ(0.0f, l.outputs<0>().data->data[0][0]);
+    EXPECT_EQ(nullptr, l.outputs<0>().data);
 }
 
 TEST(node__loader, ConstructorWithPathPBM) {

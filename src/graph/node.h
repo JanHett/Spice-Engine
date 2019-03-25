@@ -56,6 +56,8 @@ public:
     basic_node(id, is_data_sink_t)
     {}
 
+    // i/o getters
+
     constexpr InputTuple const & inputs() const {
         return p_inputs;
     }
@@ -74,25 +76,29 @@ public:
         return std::get<index>(p_outputs);
     }
 
-    // non-const versions of above getters
-    // TODO: find a way to keep vectors const while elements are non-const
+    // non-const i/o getters
 
-    constexpr InputTuple const & inputs() {
+    constexpr InputTuple & inputs() {
         return p_inputs;
     }
 
     template<unsigned int index>
-    constexpr auto const & inputs() {
+    constexpr auto & inputs() {
         return std::get<index>(p_inputs);
     }
 
-    constexpr OutputTuple const & outputs() {
+    constexpr OutputTuple & outputs() {
         return p_outputs;
     }
 
     template<unsigned int index>
-    constexpr auto const & outputs() {
+    constexpr auto & outputs() {
         return std::get<index>(p_outputs);
+    }
+
+    template<class T>
+    void connect(input<T>& in, output<T>& out) {
+        in.connect(out);
     }
 };
 
@@ -105,7 +111,7 @@ private:
 public:
     loader(const char * id): node(id, {}, {output<rgb_image>("Image")}) {
         // no actual data yet, but we need an empty image to point the output to to create a valid state
-        data = std::make_shared<rgb_image>();
+        data = nullptr;
         std::get<0>(p_outputs).data = data;
     }
     

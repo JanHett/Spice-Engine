@@ -15,8 +15,8 @@ TEST(Input, ConstructWithLabel) {
 }
 
 TEST(Input, Connect) {
-    auto i = std::make_shared<input<int>>(input<int>());
-    auto o = std::make_shared<output<int>>(output<int>());
+    auto i = std::make_shared<input<int>>();
+    auto o = std::make_shared<output<int>>();
 
     i->connect(o);
 
@@ -31,8 +31,8 @@ TEST(Input, Connect) {
 }
 
 TEST(Input, Disconnect) {
-    auto i = std::make_shared<input<int>>(input<int>());
-    auto o = std::make_shared<output<int>>(output<int>());
+    auto i = std::make_shared<input<int>>();
+    auto o = std::make_shared<output<int>>();
     i->connect(o);
 
     i->disconnect();
@@ -56,8 +56,8 @@ TEST(Output, ConstructWithLabel) {
 }
 
 TEST(Output, Connect) {
-    auto i = std::make_shared<input<int>>(input<int>());
-    auto o = std::make_shared<output<int>>(output<int>());
+    auto i = std::make_shared<input<int>>();
+    auto o = std::make_shared<output<int>>();
 
     o->connect(i);
 
@@ -72,8 +72,8 @@ TEST(Output, Connect) {
 }
 
 TEST(Output, Disconnect) {
-    auto i = std::make_shared<input<int>>(input<int>());
-    auto o = std::make_shared<output<int>>(output<int>());
+    auto i = std::make_shared<input<int>>();
+    auto o = std::make_shared<output<int>>();
     o->connect(i);
 
     o->disconnect(i);
