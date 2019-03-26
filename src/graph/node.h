@@ -25,12 +25,64 @@ enum class node_state: uint8_t {
 class basic_node {
 public:
     std::string id;
-    const bool is_data_sink;    // TODO: make this contexpr
+    const bool is_data_sink;    // TODO: guarantee this to be compile-time evaluated
 
     basic_node(const char * id, const bool is_data_sink = false):
     id(id),
     is_data_sink(is_data_sink)
     {}
+};
+
+template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
+class obs_node: public basic_node {
+protected:
+    InputTuple p_inputs;
+    OutputTuple p_outputs;
+
+public:
+    //
+    // i/o getters
+    //
+
+    constexpr InputTuple const & inputs() const {
+        return p_inputs;
+    }
+
+    template<unsigned int index>
+    constexpr auto const & inputs() const {
+        return std::get<index>(p_inputs);
+    }
+
+    constexpr OutputTuple const & outputs() const {
+        return p_outputs;
+    }
+
+    template<unsigned int index>
+    constexpr auto const & outputs() const {
+        return std::get<index>(p_outputs);
+    }
+
+    //
+    // non-const i/o getters
+    //
+
+    constexpr InputTuple & inputs() {
+        return p_inputs;
+    }
+
+    template<unsigned int index>
+    constexpr auto & inputs() {
+        return std::get<index>(p_inputs);
+    }
+
+    constexpr OutputTuple & outputs() {
+        return p_outputs;
+    }
+
+    template<unsigned int index>
+    constexpr auto & outputs() {
+        return std::get<index>(p_outputs);
+    }
 };
 
 /**
