@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #include "node_io.h"
 #include "observable.h"
@@ -38,21 +39,26 @@ public:
 };
 
 template <class T>
-constexpr auto make_callback_lambda(T* & target) {
-    return [&target](T * const value) {
-        target = value;
+constexpr std::function<void(T const)> make_callback_lambda(T * target) {
+    static_assert(!std::is_null_pointer<decltype(target)>::value,
+        "Cannot create a callback lambda for nullptr target.");
+    // TODO: get rid of duplicate runtime check
+    if (target == nullptr) throw "Cannot create a callback lambda for nullptr target.";
+    return [target](T const value) {
+        *target = value;
     };
 }
 
 template<typename SourceTuple, std::size_t... I>
-constexpr auto make_callback_tuple_impl(const SourceTuple& src, std::index_sequence<I...>) {
+constexpr auto make_callback_tuple_impl(SourceTuple & src, std::index_sequence<I...>) {
     return std::make_tuple(
-        make_callback_lambda(std::get<I>(src))...
+        make_callback_lambda(&std::get<I>(src))...
     );
 }
 
+// TODO: move make_index_sequence call (aka Indices) into call to _impl
 template<typename SourceTuple, typename Indices = std::make_index_sequence<std::tuple_size<SourceTuple>::value>>
-constexpr auto make_callback_tuple(SourceTuple const & src) {
+constexpr auto make_callback_tuple(SourceTuple & src) {
     return make_callback_tuple_impl(src, Indices{});
 }
 
