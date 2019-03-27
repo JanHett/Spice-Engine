@@ -56,8 +56,18 @@ constexpr auto make_callback_tuple_impl(SourceTuple & src, std::index_sequence<I
     );
 }
 
-// TODO: move make_index_sequence call (aka Indices) into call to _impl
-template<typename SourceTuple, typename Indices = std::make_index_sequence<std::tuple_size<SourceTuple>::value>>
+/**
+ * Creates a tuple of lambdas with size equal to the size of the tuple passed as
+ * the argument. The lambdas each take a single parameter of a type equal to the
+ * type of their corresponding entry of the source tuple and set this entry
+ * equal the value of the argument when called.
+ */
+template<
+    typename SourceTuple,
+    typename Indices = std::make_index_sequence<
+        std::tuple_size<SourceTuple>::value
+    >
+>
 constexpr auto make_callback_tuple(SourceTuple & src) {
     return make_callback_tuple_impl(src, Indices{});
 }
@@ -67,18 +77,18 @@ class obs_node: public basic_node {
 protected:
     InputTuple p_inputs;
     OutputTuple p_outputs;
-    std::array<
-        // TODO: find a way to type the argument (e.g. tuple map)!
-        std::function<void(void * const)>,
-        std::tuple_size<InputTuple>::value
-    > subscribers;
+    std::invoke_result<
+        decltype(make_callback_tuple<InputTuple>), InputTuple*
+    > p_subscribers;
 
 public:
     obs_node(InputTuple inputs = {}, OutputTuple outputs = {}):
-    basic_node(is_data_sink_t)
+    basic_node(is_data_sink_t),
+    p_subscribers(make_callback_tuple(&p_inputs))
     {}
     obs_node(const char * name, InputTuple inputs = {}, OutputTuple outputs = {}):
-    basic_node(name, is_data_sink_t)
+    basic_node(name, is_data_sink_t),
+    p_subscribers(make_callback_tuple(&p_inputs))
     {}
 
     //
@@ -137,7 +147,18 @@ public:
     bool subscribe(
         observable<decltype(std::get<input_index>(p_inputs))> & source
     ) {
+        source.subscribe(std::get<input_index>(p_subscribers));
+    }
 
+    /**
+     * Stops the input at index `input_index` listening for changes to the
+     * observable `source`.
+     */
+    template<size_t input_index>
+    bool unsubscribe(
+        observable<decltype(std::get<input_index>(p_inputs))> & source
+    ) {
+        source.unsubscribe(std::get<input_index>(p_subscribers));
     }
 };
 

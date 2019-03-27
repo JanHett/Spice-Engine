@@ -21,30 +21,33 @@ TEST(node_utilities, make_callback_tuple) {
         is_specialization_of<decltype(cb_tpl), std::tuple>::value,
         "make_callback_tuple did not return a tuple");
 
+    
     static_assert(
-        !std::is_same<decltype(std::get<0>(cb_tpl)), std::function<void(int * const)>>::value,
-        "First callback in make_callback_tuple return value has incorrect type");
+    !std::is_same<
+        decltype(std::get<0>(cb_tpl)),
+        std::function<void(int * const)>
+    >::value,
+    "First callback in make_callback_tuple return value has incorrect type");
+    
     static_assert(
-        !std::is_same<decltype(std::get<1>(cb_tpl)), std::function<void(float * const)>>::value,
-        "Second callback in make_callback_tuple return value has incorrect type");
+    !std::is_same<
+        decltype(std::get<1>(cb_tpl)),
+        std::function<void(float * const)>
+    >::value,
+    "Second callback in make_callback_tuple return value has incorrect type");
+    
     static_assert(
-        !std::is_same<decltype(std::get<2>(cb_tpl)), std::function<void(std::string * const)>>::value,
-        "Third callback in make_callback_tuple return value has incorrect type");
-
-    std::function<void(int * const)> testlambda = [&first](int * const value) {
-        std::cout << "first: " << first << " | value: " << value << " | &value: " << &value << "\n";
-        first = value;
-    };
+    !std::is_same<
+        decltype(std::get<2>(cb_tpl)),
+        std::function<void(std::string * const)>
+    >::value,
+    "Third callback in make_callback_tuple return value has incorrect type");
 
     int * inflated_answer = new int{47};
-    // testlambda(inflated_answer);
     std::get<0>(cb_tpl)(inflated_answer);
 
     EXPECT_EQ(inflated_answer, std::get<0>(src_tpl));
     EXPECT_EQ(*inflated_answer, *std::get<0>(src_tpl));
-
-    // EXPECT_EQ(inflated_answer, first);
-    // EXPECT_EQ(*inflated_answer, *first);
 
     delete answer;
     delete exact_answer;
