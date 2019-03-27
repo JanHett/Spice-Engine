@@ -72,14 +72,17 @@ constexpr auto make_callback_tuple(SourceTuple & src) {
     return make_callback_tuple_impl(src, Indices{});
 }
 
+template<class TupleT>
+using callback_tuple_t = std::invoke_result<
+        decltype(make_callback_tuple<TupleT>), TupleT*
+    >;
+
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
 class obs_node: public basic_node {
 protected:
     InputTuple p_inputs;
     OutputTuple p_outputs;
-    std::invoke_result<
-        decltype(make_callback_tuple<InputTuple>), InputTuple*
-    > p_subscribers;
+    callback_tuple_t<InputTuple> p_subscribers;
 
 public:
     obs_node(InputTuple inputs = {}, OutputTuple outputs = {}):
