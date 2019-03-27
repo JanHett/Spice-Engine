@@ -4,6 +4,27 @@
 
 #include "../../src/graph/node.h"
 
+// -----------------
+
+TEST(node_utilities, make_callback_tuple) {
+    int * answer = new int{42};
+    float * exact_answer = new float{42.47};
+    std::string * truth = new std::string("The cake is a lie!");
+    auto cb_tpl = make_callback_tuple(
+        std::tuple{answer, exact_answer, truth}
+    );
+
+    static_assert(
+        is_specialization_of<cb_tpl, std::tuple>,
+        "make_callback_tuple did not return a tuple");
+
+    delete answer;
+    delete exact_answer;
+    delete truth;
+}
+
+// -----------------
+
 TEST(node, outputsConst) {
     const loader l("test");
 

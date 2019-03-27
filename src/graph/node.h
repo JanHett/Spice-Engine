@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "node_io.h"
+#include "observable.h"
 #include "../containers/image.h"
 #include "../containers/pixel.h"
 
@@ -16,7 +17,7 @@ struct is_specialization_of : std::false_type {};
 template <template <typename...> class Template, typename... Args>
 struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
 
-enum class node_state: uint8_t {
+enum class node_flags: uint8_t {
     clear               = 0,
     computed_subgraph   = 1,        // the node is connected to a data sink, thus part of the computed subtree
     input_missing       = 1 << 1    // the node is missing a required input
@@ -24,22 +25,56 @@ enum class node_state: uint8_t {
 
 class basic_node {
 public:
-    std::string id;
+    std::string name;
     const bool is_data_sink;    // TODO: guarantee this to be compile-time evaluated
 
-    basic_node(const char * id, const bool is_data_sink = false):
-    id(id),
+    basic_node(const bool is_data_sink = false):
+    is_data_sink(is_data_sink)
+    {}
+    basic_node(const char * name, const bool is_data_sink = false):
+    name(name),
     is_data_sink(is_data_sink)
     {}
 };
+
+template <class T>
+constexpr auto make_callback_lambda(T* & target) {
+    return [&target](T * const value) {
+        target = value;
+    };
+}
+
+template<typename SourceTuple, std::size_t... I>
+constexpr auto make_callback_tuple_impl(const SourceTuple& src, std::index_sequence<I...>) {
+    return std::make_tuple(
+        make_callback_lambda(std::get<I>(src))...
+    );
+}
+
+template<typename SourceTuple, typename Indices = std::make_index_sequence<std::tuple_size<SourceTuple>::value>>
+constexpr auto make_callback_tuple(SourceTuple const & src) {
+    return make_callback_tuple_impl(src, Indices{});
+}
 
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
 class obs_node: public basic_node {
 protected:
     InputTuple p_inputs;
     OutputTuple p_outputs;
+    std::array<
+        // TODO: find a way to type the argument (e.g. tuple map)!
+        std::function<void(void * const)>,
+        std::tuple_size<InputTuple>::value
+    > subscribers;
 
 public:
+    obs_node(InputTuple inputs = {}, OutputTuple outputs = {}):
+    basic_node(is_data_sink_t)
+    {}
+    obs_node(const char * name, InputTuple inputs = {}, OutputTuple outputs = {}):
+    basic_node(name, is_data_sink_t)
+    {}
+
     //
     // i/o getters
     //
@@ -82,6 +117,21 @@ public:
     template<unsigned int index>
     constexpr auto & outputs() {
         return std::get<index>(p_outputs);
+    }
+
+    //
+    // subscription management
+    //
+
+    /**
+     * Links the value of the input at index `input_index` to the observable
+     * `source`.
+     */
+    template<size_t input_index>
+    bool subscribe(
+        observable<decltype(std::get<input_index>(p_inputs))> & source
+    ) {
+
     }
 };
 
