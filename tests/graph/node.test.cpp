@@ -67,7 +67,7 @@ TEST(node, outputsConst) {
     );
     // std::cout << outs[0].data << std::endl;
     EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
-    EXPECT_EQ(nullptr, std::get<0>(outs).data.lock());
+    EXPECT_EQ(nullptr, std::get<0>(outs).get());
 }
 
 TEST(node, outputsAtIndexConst) {
@@ -79,7 +79,7 @@ TEST(node, outputsAtIndexConst) {
         "node::outputs<0>() is returning non-const input"
     );
     EXPECT_EQ(&std::get<0>(l.outputs()), &out);
-    EXPECT_EQ(nullptr, out.data.lock());
+    EXPECT_EQ(nullptr, out.get());
 }
 
 TEST(node, inputsConst) {
@@ -91,7 +91,7 @@ TEST(node, inputsConst) {
         "node::inputs() is returning non-const tuple"
     );
     EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
-    EXPECT_EQ(nullptr, std::get<0>(ins).data.lock());
+    EXPECT_EQ(nullptr, std::get<0>(ins));
 }
 
 TEST(node, inputsAtIndexConst) {
@@ -103,7 +103,7 @@ TEST(node, inputsAtIndexConst) {
         "node::inputs<0>() is returning non-const input"
     );
     EXPECT_EQ(&std::get<0>(l.inputs()), &in);
-    EXPECT_EQ(nullptr, in.data.lock());
+    EXPECT_EQ(nullptr, in);
 }
 
 TEST(node, outputs) {
@@ -111,7 +111,7 @@ TEST(node, outputs) {
 
     auto& outs = l.outputs();
     EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
-    EXPECT_EQ(nullptr, std::get<0>(outs).data.lock());
+    EXPECT_EQ(nullptr, std::get<0>(outs).get());
 }
 
 TEST(node, outputsAtIndex) {
@@ -119,7 +119,7 @@ TEST(node, outputsAtIndex) {
 
     auto& out = l.outputs<0>();
     EXPECT_EQ(&std::get<0>(l.outputs()), &out);
-    EXPECT_EQ(nullptr, out.data.lock());
+    EXPECT_EQ(nullptr, out.get());
 }
 
 TEST(node, inputs) {
@@ -127,7 +127,7 @@ TEST(node, inputs) {
 
     auto& ins = l.inputs();
     EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
-    EXPECT_EQ(nullptr, std::get<0>(ins).data.lock());
+    EXPECT_EQ(nullptr, std::get<0>(ins));
 }
 
 TEST(node, inputsAtIndex) {
@@ -135,20 +135,20 @@ TEST(node, inputsAtIndex) {
 
     auto& in = l.inputs<0>();
     EXPECT_EQ(&std::get<0>(l.inputs()), &in);
-    EXPECT_EQ(nullptr, in.data.lock());
+    EXPECT_EQ(nullptr, in);
 }
 
 TEST(node__loader, ConstructorEmpty) {
     loader l("MyLoader");
 
-    EXPECT_EQ(nullptr, l.outputs<0>().data.lock());
+    EXPECT_EQ(nullptr, l.outputs<0>().get());
 }
 
 TEST(node__loader, ConstructorWithPathPBM) {
     loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
 
     // should be a 3x3 checker pattern
-    auto img = l.outputs<0>().data.lock();
+    auto img = l.outputs<0>().get();
     EXPECT_EQ(3, img->width());
     EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {
@@ -161,7 +161,7 @@ TEST(node__loader, OpenPBM) {
     l.open("../tests/_data/checker_3x3.pbm");
 
     // should be a 3x3 checker pattern
-    auto img = l.outputs<0>().data.lock();
+    auto img = l.outputs<0>().get();
     EXPECT_EQ(3, img->width());
     EXPECT_EQ(3, img->height());
     for (int i = 0; i < 9; ++i) {
@@ -172,12 +172,12 @@ TEST(node__loader, OpenPBM) {
 TEST(node__out_stream, constructor) {
     loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
     out_stream os_node("MyOutStream");
-    os_node.inputs<0>().connect(l.outputs<0>());
+    os_node.subscribe<0>(l.outputs<0>());
 
-    l.outputs<0>().data.lock()->print();
-    std::cout << os_node._data();
+    l.outputs<0>().get()->print();
+    std::cout << os_node.inputs<0>() << '\n';
 
-    // os_node.apply();
+    os_node.apply();
 }
 
 /* TEST(node__fast_blur, ConstructorEmpty) {

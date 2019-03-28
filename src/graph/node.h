@@ -44,8 +44,8 @@ constexpr std::function<void(T const)> make_callback_lambda(T * target) {
         "Cannot create a callback lambda for nullptr target.");
     // TODO: get rid of duplicate runtime check
     if (target == nullptr) throw "Cannot create a callback lambda for nullptr target.";
-    // TODO: make lambda constexpr?
-    return [target](T const value) {
+    // TODO: can we make lambda constexpr?
+    return [target](T const value) -> void {
         *target = value;
     };
 }
@@ -74,9 +74,7 @@ constexpr auto make_callback_tuple(SourceTuple & src) {
 }
 
 template<class TupleT>
-using callback_tuple_t = typename std::invoke_result<
-        decltype(make_callback_tuple<TupleT>), TupleT*
-    >::type;
+using callback_tuple_t = decltype(make_callback_tuple(std::declval<TupleT&>()));
 
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
 class node: public basic_node {
@@ -86,16 +84,16 @@ protected:
     callback_tuple_t<InputTuple> p_subscribers;
 
 public:
-    node(InputTuple inputs = {}, OutputTuple outputs = {}):
+    node(InputTuple&& inputs = {}, OutputTuple&& outputs = {}):
     basic_node(is_data_sink_t),
     p_inputs{inputs},
     p_outputs{outputs},
     p_subscribers(make_callback_tuple(&p_inputs))
     {}
-    node(const char * name, InputTuple inputs = {}, OutputTuple outputs = {}):
+    node(const char * name, InputTuple&& inputs = {}, OutputTuple&& outputs = {}):
     basic_node(name, is_data_sink_t),
-    p_inputs{inputs},
-    p_outputs{outputs},
+    p_inputs{std::move(inputs)},
+    p_outputs{std::move(outputs)},
     p_subscribers(make_callback_tuple(p_inputs))
     {}
 
@@ -153,9 +151,13 @@ public:
      */
     template<size_t input_index>
     bool subscribe(
-        observable<decltype(std::get<input_index>(p_inputs))> & source
+        observable<
+            typename std::remove_reference<
+                decltype(*std::get<input_index>(p_inputs))
+            >::type
+        > & source
     ) {
-        source.subscribe(std::get<input_index>(p_subscribers));
+        return source.subscribe(std::get<input_index>(p_subscribers));
     }
 
     /**
@@ -164,7 +166,11 @@ public:
      */
     template<size_t input_index>
     bool unsubscribe(
-        observable<decltype(std::get<input_index>(p_inputs))> & source
+        observable<
+            typename std::remove_reference<
+                decltype(*std::get<input_index>(p_inputs))
+            >::type
+        > & source
     ) {
         source.unsubscribe(std::get<input_index>(p_subscribers));
     }
@@ -247,7 +253,7 @@ class loader: public node<
 > {
 public:
     loader(const char * id):
-    node(id, {}, { (observable<rgb_image>) })
+    node(id, {}, { (observable<rgb_image>()) })
     {
     }
     
@@ -286,9 +292,9 @@ public:
     node(
         id,
         { // inputs
-            new rgb_image{},
-            new float{},
-            new unsigned int{}
+            nullptr,
+            nullptr,
+            nullptr
         }, { // outputs
             observable<rgb_image>{}
         }
@@ -308,37 +314,26 @@ public:
 };
 
 class out_stream: public node<
-    std::tuple<input<rgb_image>>,
+    std::tuple<rgb_image*>,
     std::tuple<>,
     true
 > {
 private:
     std::ostream & p_stream;
 
-    std::shared_ptr<rgb_image> data;
-
-    std::function<void(std::weak_ptr<rgb_image>)> p_on_input_updated = [&](std::weak_ptr<rgb_image> new_img) {
-        std::cout << "Input data changed. ";
-        data = new_img.lock();
-        std::cout << "New image is at " << data << "\n";
-    };
 public:
     out_stream(const char * id, std::ostream & stream = std::cout):
     node(
         id,
-        { input<rgb_image>("Image") },
+        { nullptr },
         {}
     ),
-    p_stream(stream),
-    data(std::get<0>(p_inputs).data.lock())
+    p_stream(stream)
     {
-        inputs<0>().subscribe(p_on_input_updated);
     }
 
-    auto _data() { return data; }
-
     bool apply() {
-        print_color(*data);
+        print_color(*inputs<0>());
         return true;
     }
 };

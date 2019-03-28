@@ -40,7 +40,7 @@ public:
     /**
      * Gets a pointer to the current state of the observable's value.
      */
-    T const * const get() {
+    T const * const get() const {
         return p_value.get();
     }
 
