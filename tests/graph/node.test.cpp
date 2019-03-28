@@ -13,7 +13,7 @@ TEST(node_utilities, make_callback_tuple) {
     auto src_tpl = std::tuple{answer, exact_answer, truth};
     // TODO: remove first
     auto first = std::get<0>(src_tpl);
-    auto cb_tpl = make_callback_tuple(
+    callback_tuple_t<decltype(src_tpl)> cb_tpl = make_callback_tuple(
         src_tpl
     );
 

@@ -44,6 +44,7 @@ constexpr std::function<void(T const)> make_callback_lambda(T * target) {
         "Cannot create a callback lambda for nullptr target.");
     // TODO: get rid of duplicate runtime check
     if (target == nullptr) throw "Cannot create a callback lambda for nullptr target.";
+    // TODO: make lambda constexpr?
     return [target](T const value) {
         *target = value;
     };
@@ -73,25 +74,29 @@ constexpr auto make_callback_tuple(SourceTuple & src) {
 }
 
 template<class TupleT>
-using callback_tuple_t = std::invoke_result<
+using callback_tuple_t = typename std::invoke_result<
         decltype(make_callback_tuple<TupleT>), TupleT*
-    >;
+    >::type;
 
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
-class obs_node: public basic_node {
+class node: public basic_node {
 protected:
     InputTuple p_inputs;
     OutputTuple p_outputs;
     callback_tuple_t<InputTuple> p_subscribers;
 
 public:
-    obs_node(InputTuple inputs = {}, OutputTuple outputs = {}):
+    node(InputTuple inputs = {}, OutputTuple outputs = {}):
     basic_node(is_data_sink_t),
+    p_inputs{inputs},
+    p_outputs{outputs},
     p_subscribers(make_callback_tuple(&p_inputs))
     {}
-    obs_node(const char * name, InputTuple inputs = {}, OutputTuple outputs = {}):
+    node(const char * name, InputTuple inputs = {}, OutputTuple outputs = {}):
     basic_node(name, is_data_sink_t),
-    p_subscribers(make_callback_tuple(&p_inputs))
+    p_inputs{inputs},
+    p_outputs{outputs},
+    p_subscribers(make_callback_tuple(p_inputs))
     {}
 
     //
@@ -172,7 +177,7 @@ public:
  * TODO: static_assert that InputTuple and OutputTuple conatain the correct types.
  */
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
-class node: public basic_node {
+class node_: public basic_node {
     static_assert(is_specialization_of<InputTuple, std::tuple>::value,
         "Inputs can only be tuples of shared_ptr<inputs> or vector<shared_ptr<input>>s.");
     static_assert(is_specialization_of<OutputTuple, std::tuple>::value,
@@ -186,7 +191,7 @@ protected:
 public:
     std::string id;
 
-    node(const char * id, InputTuple inputs = {}, OutputTuple outputs = {}):
+    node_(const char * id, InputTuple inputs = {}, OutputTuple outputs = {}):
     basic_node(id, is_data_sink_t)
     {}
 
@@ -237,19 +242,16 @@ public:
 };
 
 class loader: public node<
-    std::tuple<>,                    // no inputs
-    std::tuple<output<rgb_image>>    // one output
+    std::tuple<>,
+    std::tuple<observable<rgb_image>>
 > {
-private:
-    std::shared_ptr<rgb_image> data;
 public:
     loader(const char * id):
-    node(id, {}, {output<rgb_image>("Image")}),
-    data(nullptr)
+    node(id, {}, { (observable<rgb_image>) })
     {
     }
     
-    loader(const char * id, const char * path): node(id, {}, {output<rgb_image>("Image")}) {
+    loader(const char * id, const char * path): node(id, {}, {observable<rgb_image>{}}) {
         open(path);
     }
 
@@ -258,13 +260,7 @@ public:
      */
     bool open(const char * path) {
         try {
-            auto m = ppm(path).to_pixel_matrix<3>();
-            // if there is not yet a data matrix, create one for this image
-            if (data == nullptr) {
-                data = std::make_shared<rgb_image>(m);
-                std::get<0>(p_outputs).data = data;
-            }
-            else *data = m;
+            outputs<0>().set(ppm(path).to_pixel_matrix<3>());
         } catch (char const * err) {
             fprintf(stderr, "%s\n", err);
             return false;
@@ -274,15 +270,15 @@ public:
 };
 
 class fast_blur: public node<
-    std::tuple<input<rgb_image>, input<float>, input<unsigned int>>,
-    std::tuple<output<rgb_image>>
+    std::tuple<rgb_image *, float *, unsigned int *>,
+    std::tuple<observable<rgb_image>>
 > {
 private:
     // aliases for in-/outputs contained in tuples
-    input<rgb_image>& in_image;
-    input<float>& ctrl_radius;
-    input<unsigned int>& ctrl_passes;
-    output<rgb_image>& out_image;
+    rgb_image*& in_image;
+    float*& ctrl_radius;
+    unsigned int*& ctrl_passes;
+    observable<rgb_image>& out_image;
 
     std::shared_ptr<rgb_image> data;
 public:
@@ -290,11 +286,11 @@ public:
     node(
         id,
         { // inputs
-            input<rgb_image>("Image"),
-            input<float>("Radius"),
-            input<unsigned int>("Passes")
+            new rgb_image{},
+            new float{},
+            new unsigned int{}
         }, { // outputs
-            output<rgb_image>("Image")
+            observable<rgb_image>{}
         }
     ),
     // in-/output aliases
@@ -303,12 +299,10 @@ public:
     ctrl_passes(std::get<2>(p_inputs)),
     out_image(std::get<0>(p_outputs))
     {
-        *data = in_image.data.lock()->fast_blur(*ctrl_radius.data.lock(), *ctrl_passes.data.lock());
-        out_image.data = data;
     }
 
     bool apply() {
-        *data = data->fast_blur(*ctrl_radius.data.lock(), *ctrl_passes.data.lock());
+        out_image.set(in_image->fast_blur(*ctrl_radius, *ctrl_passes));
         return false;
     }
 };
