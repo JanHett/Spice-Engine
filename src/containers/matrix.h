@@ -5,6 +5,7 @@
 
 #include <array>
 #include <vector>
+#include <map>
 #include <type_traits>
 #include <cmath>
 
@@ -398,6 +399,25 @@ inline void print_color(matrix<pixel<num_channels>> const & mtx) {
         std::cout << "\033[0m" << std::endl;
     }
 }
+
+template<typename T, T defalt_value>
+class sparse_matrix {
+private:
+    std::map<std::pair<size_t, size_t>, T> p_entries;
+
+public:
+    /**
+     * Returns the element at the position specified by the pair.
+     * If this position has no set value, the default is returned.
+     * TODO: make non-const version, check if rvalue version always works
+     */
+    T operator[](std::pair<size_t, size_t>&& entry) const {
+        std::cout << "rvalue&&\n";
+        auto found = p_entries.find(entry);
+        if (found == p_entries.end()) return defalt_value;
+        return std::get<1>(*found);
+    }
+};
 
 /**
  * Generic matrix class.

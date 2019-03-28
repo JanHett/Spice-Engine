@@ -66,7 +66,8 @@ TEST(node, outputsConst) {
         "node::outputs() is returning non-const tuple"
     );
     // std::cout << outs[0].data << std::endl;
-    EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
+    EXPECT_EQ(1,
+        std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
     EXPECT_EQ(nullptr, std::get<0>(outs).get());
 }
 
@@ -90,7 +91,8 @@ TEST(node, inputsConst) {
         std::is_const<std::remove_reference<decltype(ins)>::type>::value,
         "node::inputs() is returning non-const tuple"
     );
-    EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
+    EXPECT_EQ(1,
+        std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
     EXPECT_EQ(nullptr, std::get<0>(ins));
 }
 
@@ -110,7 +112,8 @@ TEST(node, outputs) {
     loader l("test");
 
     auto& outs = l.outputs();
-    EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
+    EXPECT_EQ(1,
+        std::tuple_size<std::remove_reference<decltype(outs)>::type>::value);
     EXPECT_EQ(nullptr, std::get<0>(outs).get());
 }
 
@@ -126,7 +129,8 @@ TEST(node, inputs) {
     out_stream l("test");
 
     auto& ins = l.inputs();
-    EXPECT_EQ(1, std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
+    EXPECT_EQ(1,
+        std::tuple_size<std::remove_reference<decltype(ins)>::type>::value);
     EXPECT_EQ(nullptr, std::get<0>(ins));
 }
 

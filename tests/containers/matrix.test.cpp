@@ -5,6 +5,10 @@
 
 #include "../../src/containers/matrix.h"
 
+// -------------- //
+//     matrix     //
+// -------------- //
+
 TEST(Matrix, ConstructorEmpty) {
     matrix<float> m;
     EXPECT_EQ(1, m.width());
@@ -409,7 +413,27 @@ TEST(Matrix, fast_blur) {
     } */
 }
 
-// --------------------
+// --------------------- //
+//     sparse_matrix     //
+// --------------------- //
+
+TEST(sparse_matrix, OperatorSubscript) {
+    sparse_matrix<int, 0> m;
+
+    // test rvalue version
+    EXPECT_EQ(0, (m[{0, 0}]));
+    EXPECT_EQ(0, (m[{42, 47}]));
+
+    // test lvalue version
+    std::pair pos1{0, 0};
+    std::pair pos2{42, 47};
+    EXPECT_EQ(0, (m[pos1]));
+    EXPECT_EQ(0, (m[pos2]));
+}
+
+// --------------------- //
+//     static_matrix     //
+// --------------------- //
 
 TEST(StaticMatrix, StaticConstAt) {
     static_matrix<int, 2, 2> _m;

@@ -2,59 +2,68 @@
 #define SPICE_NODE
 
 #include <string>
-#include <vector>
 #include <type_traits>
+#include <vector>
 
-#include "node_io.h"
-#include "observable.h"
 #include "../containers/image.h"
 #include "../containers/pixel.h"
+#include "node_io.h"
+#include "observable.h"
 
 #include "../file_formats/pbm.h"
 
 // Tests if T is a specialization of Template
 template <typename T, template <typename...> class Template>
-struct is_specialization_of : std::false_type {};
+struct is_specialization_of : std::false_type {
+};
 template <template <typename...> class Template, typename... Args>
-struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
+struct is_specialization_of<Template<Args...>, Template> : std::true_type {
+};
 
-enum class node_flags: uint8_t {
-    clear               = 0,
-    computed_subgraph   = 1,        // the node is connected to a data sink, thus part of the computed subtree
-    input_missing       = 1 << 1    // the node is missing a required input
+enum class node_flags : uint8_t {
+    clear = 0,
+    computed_subgraph = 1, // the node is connected to a data sink,
+    // thus part of the computed subtree
+    input_missing = 1 << 1 // the node is missing a required input
 };
 
 class basic_node {
 public:
     std::string name;
-    const bool is_data_sink;    // TODO: guarantee this to be compile-time evaluated
+    // TODO: guarantee this to be compile-time evaluated
+    const bool is_data_sink;
 
-    basic_node(const bool is_data_sink = false):
-    is_data_sink(is_data_sink)
-    {}
-    basic_node(const char * name, const bool is_data_sink = false):
-    name(name),
-    is_data_sink(is_data_sink)
-    {}
+    basic_node(const bool is_data_sink = false)
+        : is_data_sink(is_data_sink)
+    {
+    }
+    basic_node(const char* name, const bool is_data_sink = false)
+        : name(name)
+        , is_data_sink(is_data_sink)
+    {
+    }
 };
 
 template <class T>
-constexpr std::function<void(T const)> make_callback_lambda(T * target) {
+constexpr std::function<void(T const)> make_callback_lambda(T* target)
+{
     static_assert(!std::is_null_pointer<decltype(target)>::value,
         "Cannot create a callback lambda for nullptr target.");
     // TODO: get rid of duplicate runtime check
-    if (target == nullptr) throw "Cannot create a callback lambda for nullptr target.";
+    if (target == nullptr)
+        throw "Cannot create a callback lambda for nullptr target.";
     // TODO: can we make lambda constexpr?
     return [target](T const value) -> void {
         *target = value;
     };
 }
 
-template<typename SourceTuple, std::size_t... I>
-constexpr auto make_callback_tuple_impl(SourceTuple & src, std::index_sequence<I...>) {
+template <typename SourceTuple, std::size_t... I>
+constexpr auto make_callback_tuple_impl(SourceTuple& src,
+    std::index_sequence<I...>)
+{
     return std::make_tuple(
-        make_callback_lambda(&std::get<I>(src))...
-    );
+        make_callback_lambda(&std::get<I>(src))...);
 }
 
 /**
@@ -63,59 +72,66 @@ constexpr auto make_callback_tuple_impl(SourceTuple & src, std::index_sequence<I
  * type of their corresponding entry of the source tuple and set this entry
  * equal the value of the argument when called.
  */
-template<
+template <
     typename SourceTuple,
     typename Indices = std::make_index_sequence<
-        std::tuple_size<SourceTuple>::value
-    >
->
-constexpr auto make_callback_tuple(SourceTuple & src) {
-    return make_callback_tuple_impl(src, Indices{});
+        std::tuple_size<SourceTuple>::value>>
+constexpr auto make_callback_tuple(SourceTuple& src)
+{
+    return make_callback_tuple_impl(src, Indices {});
 }
 
-template<class TupleT>
+template <class TupleT>
 using callback_tuple_t = decltype(make_callback_tuple(std::declval<TupleT&>()));
 
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
-class node: public basic_node {
+class node : public basic_node {
 protected:
     InputTuple p_inputs;
     OutputTuple p_outputs;
     callback_tuple_t<InputTuple> p_subscribers;
 
 public:
-    node(InputTuple&& inputs = {}, OutputTuple&& outputs = {}):
-    basic_node(is_data_sink_t),
-    p_inputs{inputs},
-    p_outputs{outputs},
-    p_subscribers(make_callback_tuple(&p_inputs))
-    {}
-    node(const char * name, InputTuple&& inputs = {}, OutputTuple&& outputs = {}):
-    basic_node(name, is_data_sink_t),
-    p_inputs{std::move(inputs)},
-    p_outputs{std::move(outputs)},
-    p_subscribers(make_callback_tuple(p_inputs))
-    {}
+    node(InputTuple&& inputs = {}, OutputTuple&& outputs = {})
+        : basic_node(is_data_sink_t)
+        , p_inputs { inputs }
+        , p_outputs { outputs }
+        , p_subscribers(make_callback_tuple(&p_inputs))
+    {
+    }
+    node(const char* name,
+        InputTuple&& inputs = {},
+        OutputTuple&& outputs = {})
+        : basic_node(name, is_data_sink_t)
+        , p_inputs { std::move(inputs) }
+        , p_outputs { std::move(outputs) }
+        , p_subscribers(make_callback_tuple(p_inputs))
+    {
+    }
 
     //
     // i/o getters
     //
 
-    constexpr InputTuple const & inputs() const {
+    constexpr InputTuple const& inputs() const
+    {
         return p_inputs;
     }
 
-    template<unsigned int index>
-    constexpr auto const & inputs() const {
+    template <unsigned int index>
+    constexpr auto const& inputs() const
+    {
         return std::get<index>(p_inputs);
     }
 
-    constexpr OutputTuple const & outputs() const {
+    constexpr OutputTuple const& outputs() const
+    {
         return p_outputs;
     }
 
-    template<unsigned int index>
-    constexpr auto const & outputs() const {
+    template <unsigned int index>
+    constexpr auto const& outputs() const
+    {
         return std::get<index>(p_outputs);
     }
 
@@ -123,21 +139,25 @@ public:
     // non-const i/o getters
     //
 
-    constexpr InputTuple & inputs() {
+    constexpr InputTuple& inputs()
+    {
         return p_inputs;
     }
 
-    template<unsigned int index>
-    constexpr auto & inputs() {
+    template <unsigned int index>
+    constexpr auto& inputs()
+    {
         return std::get<index>(p_inputs);
     }
 
-    constexpr OutputTuple & outputs() {
+    constexpr OutputTuple& outputs()
+    {
         return p_outputs;
     }
 
-    template<unsigned int index>
-    constexpr auto & outputs() {
+    template <unsigned int index>
+    constexpr auto& outputs()
+    {
         return std::get<index>(p_outputs);
     }
 
@@ -149,14 +169,12 @@ public:
      * Links the value of the input at index `input_index` to the observable
      * `source`.
      */
-    template<size_t input_index>
+    template <size_t input_index>
     bool subscribe(
         observable<
             typename std::remove_reference<
-                decltype(*std::get<input_index>(p_inputs))
-            >::type
-        > & source
-    ) {
+                decltype(*std::get<input_index>(p_inputs))>::type>& source)
+    {
         return source.subscribe(std::get<input_index>(p_subscribers));
     }
 
@@ -164,14 +182,12 @@ public:
      * Stops the input at index `input_index` listening for changes to the
      * observable `source`.
      */
-    template<size_t input_index>
+    template <size_t input_index>
     bool unsubscribe(
         observable<
             typename std::remove_reference<
-                decltype(*std::get<input_index>(p_inputs))
-            >::type
-        > & source
-    ) {
+                decltype(*std::get<input_index>(p_inputs))>::type>& source)
+    {
         source.unsubscribe(std::get<input_index>(p_subscribers));
     }
 };
@@ -180,14 +196,15 @@ public:
  * Base class for all nodes.
  * InputTuple should be a std::tuple containing only inputs and vector<input>s.
  * OutputTuple should be a std::tuple containing only outputs.
- * TODO: static_assert that InputTuple and OutputTuple conatain the correct types.
+ * TODO: static_assert that InputTuple & OutputTuple conatain the correct types.
  */
 template <class InputTuple, class OutputTuple, bool is_data_sink_t = false>
-class node_: public basic_node {
+class node_ : public basic_node {
     static_assert(is_specialization_of<InputTuple, std::tuple>::value,
         "Inputs can only be tuples of shared_ptr<inputs> or vector<shared_ptr<input>>s.");
     static_assert(is_specialization_of<OutputTuple, std::tuple>::value,
         "Outputs can only be tuples of outputs.");
+
 protected:
     const std::string _type;
 
@@ -197,77 +214,89 @@ protected:
 public:
     std::string id;
 
-    node_(const char * id, InputTuple inputs = {}, OutputTuple outputs = {}):
-    basic_node(id, is_data_sink_t)
-    {}
+    node_(const char* id, InputTuple inputs = {}, OutputTuple outputs = {})
+        : basic_node(id, is_data_sink_t)
+    {
+    }
 
     // i/o getters
 
-    constexpr InputTuple const & inputs() const {
+    constexpr InputTuple const& inputs() const
+    {
         return p_inputs;
     }
 
-    template<unsigned int index>
-    constexpr auto const & inputs() const {
+    template <unsigned int index>
+    constexpr auto const& inputs() const
+    {
         return std::get<index>(p_inputs);
     }
 
-    constexpr OutputTuple const & outputs() const {
+    constexpr OutputTuple const& outputs() const
+    {
         return p_outputs;
     }
 
-    template<unsigned int index>
-    constexpr auto const & outputs() const {
+    template <unsigned int index>
+    constexpr auto const& outputs() const
+    {
         return std::get<index>(p_outputs);
     }
 
     // non-const i/o getters
 
-    constexpr InputTuple & inputs() {
+    constexpr InputTuple& inputs()
+    {
         return p_inputs;
     }
 
-    template<unsigned int index>
-    constexpr auto & inputs() {
+    template <unsigned int index>
+    constexpr auto& inputs()
+    {
         return std::get<index>(p_inputs);
     }
 
-    constexpr OutputTuple & outputs() {
+    constexpr OutputTuple& outputs()
+    {
         return p_outputs;
     }
 
-    template<unsigned int index>
-    constexpr auto & outputs() {
+    template <unsigned int index>
+    constexpr auto& outputs()
+    {
         return std::get<index>(p_outputs);
     }
 
-    template<class T>
-    void connect(input<T>& in, output<T>& out) {
+    template <class T>
+    void connect(input<T>& in, output<T>& out)
+    {
         in.connect(out);
     }
 };
 
-class loader: public node<
-    std::tuple<>,
-    std::tuple<observable<rgb_image>>
-> {
+class loader : public node<
+                   std::tuple<>,
+                   std::tuple<observable<rgb_image>>> {
 public:
-    loader(const char * id):
-    node(id, {}, { (observable<rgb_image>()) })
+    loader(const char* id)
+        : node(id, {}, { (observable<rgb_image>()) })
     {
     }
-    
-    loader(const char * id, const char * path): node(id, {}, {observable<rgb_image>{}}) {
+
+    loader(const char* id, const char* path)
+        : node(id, {}, { observable<rgb_image> {} })
+    {
         open(path);
     }
 
     /**
      * Sets the source path and loads the specified file as an image.
      */
-    bool open(const char * path) {
+    bool open(const char* path)
+    {
         try {
             outputs<0>().set(ppm(path).to_pixel_matrix<3>());
-        } catch (char const * err) {
+        } catch (char const* err) {
             fprintf(stderr, "%s\n", err);
             return false;
         }
@@ -275,10 +304,9 @@ public:
     }
 };
 
-class fast_blur: public node<
-    std::tuple<rgb_image *, float *, unsigned int *>,
-    std::tuple<observable<rgb_image>>
-> {
+class fast_blur : public node<
+                      std::tuple<rgb_image*, float*, unsigned int*>,
+                      std::tuple<observable<rgb_image>>> {
 private:
     // aliases for in-/outputs contained in tuples
     rgb_image*& in_image;
@@ -287,52 +315,52 @@ private:
     observable<rgb_image>& out_image;
 
     std::shared_ptr<rgb_image> data;
+
 public:
-    fast_blur(const char * id):
-    node(
-        id,
-        { // inputs
-            nullptr,
-            nullptr,
-            nullptr
-        }, { // outputs
-            observable<rgb_image>{}
-        }
-    ),
-    // in-/output aliases
-    in_image(std::get<0>(p_inputs)),
-    ctrl_radius(std::get<1>(p_inputs)),
-    ctrl_passes(std::get<2>(p_inputs)),
-    out_image(std::get<0>(p_outputs))
+    fast_blur(const char* id)
+        : node(
+            id,
+            { // inputs
+                nullptr,
+                nullptr,
+                nullptr },
+            { // outputs
+                observable<rgb_image> {} })
+        ,
+        // in-/output aliases
+        in_image(std::get<0>(p_inputs))
+        , ctrl_radius(std::get<1>(p_inputs))
+        , ctrl_passes(std::get<2>(p_inputs))
+        , out_image(std::get<0>(p_outputs))
     {
     }
 
-    bool apply() {
+    bool apply()
+    {
         out_image.set(in_image->fast_blur(*ctrl_radius, *ctrl_passes));
         return false;
     }
 };
 
-class out_stream: public node<
-    std::tuple<rgb_image*>,
-    std::tuple<>,
-    true
-> {
+class out_stream : public node<
+                       std::tuple<rgb_image*>,
+                       std::tuple<>,
+                       true> {
 private:
-    std::ostream & p_stream;
+    std::ostream& p_stream;
 
 public:
-    out_stream(const char * id, std::ostream & stream = std::cout):
-    node(
-        id,
-        { nullptr },
-        {}
-    ),
-    p_stream(stream)
+    out_stream(const char* id, std::ostream& stream = std::cout)
+        : node(
+            id,
+            { nullptr },
+            {})
+        , p_stream(stream)
     {
     }
 
-    bool apply() {
+    bool apply()
+    {
         print_color(*inputs<0>());
         return true;
     }
