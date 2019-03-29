@@ -53,9 +53,13 @@ public:
      */
     bool deregister_node(std::shared_ptr<basic_node> node)
     {
-        // if this is a data sink, we don't return true unless it was also removed from data_sinks
+        // if this is a data sink, we don't return true unless it was also
+        // removed from data_sinks.
         if (node->is_data_sink) { // TODO: make this contexpr
-            auto found_in_data_sinks = std::find(p_data_sinks.begin(), p_data_sinks.end(), node);
+            auto found_in_data_sinks = std::find(
+                p_data_sinks.begin(),
+                p_data_sinks.end(),
+                node);
             if (found_in_data_sinks == p_data_sinks.end())
                 return false;
             p_data_sinks.erase(found_in_data_sinks);

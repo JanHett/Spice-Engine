@@ -362,7 +362,6 @@ public:
 };
 
 inline void print_greyscale(matrix<float> const & mtx) {
-    // \033[48;2;<r>;<g>;<b>m
     for (unsigned int y = 0; y < mtx.height(); ++y) {
         for (unsigned int x = 0; x < mtx.width(); ++x) {
             std::cout << "\033[48;2;" <<
@@ -382,47 +381,79 @@ inline void print_greyscale(matrix<float> const & mtx) {
 
 template<unsigned int num_channels = 3>
 inline void print_color(matrix<pixel<num_channels>> const & mtx) {
-    // \033[48;2;<r>;<g>;<b>m
     for (unsigned int y = 0; y < mtx.height(); ++y) {
         for (unsigned int x = 0; x < mtx.width(); ++x) {
             std::cout << "\033[48;2;" <<
             // set BG-colours
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) <<
             // set FG-colours
             ";38;2;" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) << "m" << "  ";
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) << "m" <<
+            // print two spaces to get a mostly square "pixel"
+            "  ";
         }
+        // reset colours
         std::cout << "\033[0m" << std::endl;
     }
 }
 
-template<typename T, T defalt_value>
+template<typename T, T defalt_value = T{}>
 class sparse_matrix {
 private:
     std::map<std::pair<size_t, size_t>, T> p_entries;
 
 public:
+    /// Reference to an element in the sparse_matrix that can be assigned to.
+    /// This is used as the return value of the non-const version of
+    /// sparse_matrix::operator[].
+    struct reference {
+        reference(std::pair<size_t, size_t> key, 
+            std::map<std::pair<size_t, size_t>, T>& data):
+        key(key),
+        data(data)
+        {}
+
+        T& operator=(T other) {
+            std::swap(data[key], other);
+            return data[key];
+        }
+    private:
+        std::pair<size_t, size_t> key;
+        std::map<std::pair<size_t, size_t>, T>& data;
+    };
+
     /**
      * Returns the element at the position specified by the pair.
      * If this position has no set value, the default is returned.
-     * TODO: make non-const version, check if rvalue version always works
+     * TODO: make non-const version retuning a T&, check if rvalue version
+     * really always works.
      */
-    T operator[](std::pair<size_t, size_t>&& entry) const {
-        std::cout << "rvalue&&\n";
+    T operator[](const std::pair<size_t, size_t>&& entry) const {
         auto found = p_entries.find(entry);
         if (found == p_entries.end()) return defalt_value;
         return std::get<1>(*found);
+    }
+    reference operator[](const std::pair<size_t, size_t>&& entry) {
+        return reference(entry, p_entries);
     }
 };
 
 /**
  * Generic matrix class.
- * This class assumes that `T` is a number-like type providing the mathematical operators +, -, * and /.
- * Empty value initialisation T{} should initialise the type with a 'zero value'.
+ * This class assumes that `T` is a number-like type providing the mathematical
+ * operators +, -, * and /.
+ * Empty value initialisation T{} should initialise the type with a
+ * 'zero value'.
  */
 template <class T, unsigned int w = 1, unsigned int h = 1>
 class static_matrix {
@@ -448,7 +479,8 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr const T& at () const {
         // bounds checking
-        static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside static_matrix.");
+        static_assert(y * w + x + 1 <= w * h,
+            "Cannot access coordinates outside static_matrix.");
         return data[y * w + x];
     }
 
@@ -459,7 +491,8 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr T& at () {
         // bounds checking
-        static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside static_matrix.");
+        static_assert(y * w + x + 1 <= w * h,
+            "Cannot access coordinates outside static_matrix.");
         return data[y * w + x];
     }
 
