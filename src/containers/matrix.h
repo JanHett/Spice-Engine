@@ -412,16 +412,38 @@ public:
      * TODO: make non-const version, check if rvalue version always works
      */
     T operator[](std::pair<size_t, size_t>&& entry) const {
-        std::cout << "rvalue&&\n";
         auto found = p_entries.find(entry);
         if (found == p_entries.end()) return defalt_value;
         return std::get<1>(*found);
     }
+
+    struct reference
+    {
+    private:
+        sparse_matrix<T, defalt_value>& p_target;
+        std::pair<size_t, size_t> p_position;
+    public:
+        /// Creates a reference to `target`'s entry at `position`.
+        reference(sparse_matrix<T, defalt_value>& target, 
+            std::pair<size_t, size_t> position)
+            : p_target(target)
+            , p_position(position)
+        {}
+
+        /// Assigns the value of `other` to the entry of this reference's target
+        /// at the position held by this reference.
+        T& operator=(const T& other)
+        {
+            p_target.p_entries[p_position] = other;
+            return p_target.p_entries[p_position];
+        }
+    };
 };
 
 /**
  * Generic matrix class.
- * This class assumes that `T` is a number-like type providing the mathematical operators +, -, * and /.
+ * This class assumes that `T` is a number-like type providing the mathematical
+ * operators +, -, * and /.
  * Empty value initialisation T{} should initialise the type with a 'zero value'.
  */
 template <class T, unsigned int w = 1, unsigned int h = 1>

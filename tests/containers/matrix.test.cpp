@@ -420,15 +420,26 @@ TEST(Matrix, fast_blur) {
 TEST(sparse_matrix, OperatorSubscript) {
     sparse_matrix<int, 0> m;
 
-    // test rvalue version
+    // test with rvalue argument
     EXPECT_EQ(0, (m[{0, 0}]));
     EXPECT_EQ(0, (m[{42, 47}]));
 
-    // test lvalue version
+    // test with lvalue argument
     std::pair pos1{0, 0};
     std::pair pos2{42, 47};
     EXPECT_EQ(0, (m[pos1]));
     EXPECT_EQ(0, (m[pos2]));
+}
+
+TEST(sparse_matrix, __reference__operatorAssign) {
+    sparse_matrix<int, 0> m;
+    sparse_matrix<int, 0>::reference ref(m, {42, 47});
+
+    EXPECT_EQ(0, (m[{42, 47}]));
+
+    ref = 4742;
+
+    EXPECT_EQ(4742, (m[{42, 47}]));
 }
 
 // --------------------- //
