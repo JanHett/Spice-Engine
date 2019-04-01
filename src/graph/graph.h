@@ -40,7 +40,7 @@ public:
         if (std::find(p_nodes.begin(), p_nodes.end(), node) != p_nodes.end())
             return false;
         p_nodes.push_back(node);
-        // TODO: make this contexpr
+        // TODO: make this constexpr
         if (node->is_data_sink)
             p_data_sinks.push_back(node);
         return true;

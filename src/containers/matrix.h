@@ -416,20 +416,55 @@ public:
     /// Reference to an element in the sparse_matrix that can be assigned to.
     /// This is used as the return value of the non-const version of
     /// sparse_matrix::operator[].
-    struct reference {
-        reference(std::pair<size_t, size_t> key, 
-            std::map<std::pair<size_t, size_t>, T>& data):
-        key(key),
-        data(data)
+    struct reference
+    {
+    private:
+        sparse_matrix<T, defalt_value>& p_target;
+        std::pair<size_t, size_t> p_position;
+    public:
+        /// Creates a reference to `target`'s entry at `position`.
+        reference(sparse_matrix<T, defalt_value>& target, 
+            std::pair<size_t, size_t> position)
+            : p_target(target)
+            , p_position(position)
         {}
 
-        T& operator=(T other) {
-            std::swap(data[key], other);
-            return data[key];
+        /// Assigns the value of `other` to the entry of this reference's target
+        /// at the position held by this reference.
+        /// TODO: make sure copy-and-swap makes sense here.
+        T& operator=(T other)
+        {
+            std::swap(p_target.p_entries[p_position], other);
+            return p_target.p_entries[p_position];
         }
-    private:
-        std::pair<size_t, size_t> key;
-        std::map<std::pair<size_t, size_t>, T>& data;
+
+        // inline bool operator==(const reference& lhs, const reference& rhs){
+        //     return lhs.p_target[lhs.p_position] < rhs.p_target[rhs.p_position];
+        // }
+        // inline bool operator!=(const reference& lhs, const reference& rhs){ return !(lhs == rhs); }
+
+        // friend bool operator<(const reference& l, const reference& r)
+        // {
+        //     return l.p_target[l.p_position] < r.p_target[r.p_position];
+        // }
+
+        // friend bool operator<(const reference& l, const T& r)
+        // {
+        //     return l.p_target[l.p_position] < r;
+        // }
+        // inline bool operator> (const reference& lhs, const reference& rhs)
+        // { return rhs < lhs; }
+        // inline bool operator> (const reference& lhs, const T& rhs)
+        // { return rhs < lhs; }
+        // inline bool operator<=(const reference& lhs, const reference& rhs)
+        // { return !(lhs > rhs); }
+        // inline bool operator<=(const reference& lhs, const T& rhs)
+        // { return !(lhs > rhs); }
+        // inline bool operator>=(const reference& lhs, const reference& rhs)
+        // { return !(lhs < rhs); }
+        // inline bool operator>=(const reference& lhs, const T& rhs)
+        // { return !(lhs < rhs); }
+
     };
 
     /**
@@ -444,7 +479,7 @@ public:
         return std::get<1>(*found);
     }
     reference operator[](const std::pair<size_t, size_t>&& entry) {
-        return reference(entry, p_entries);
+        return reference(*this, entry);
     }
 };
 
