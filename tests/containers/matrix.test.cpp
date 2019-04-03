@@ -417,6 +417,48 @@ TEST(Matrix, fast_blur) {
 //     sparse_matrix     //
 // --------------------- //
 
+TEST(sparse_matrix, __reference__operatorEquals) {
+    sparse_matrix<int, 0> m;
+    sparse_matrix<int, 0>::reference ref(m, {47, 42});
+    sparse_matrix<int, 0>::reference ref2(m, {42, 47});
+
+    EXPECT_TRUE(ref == 0);
+    EXPECT_FALSE(ref == 4742);
+    EXPECT_TRUE(ref == ref2);
+    EXPECT_TRUE(ref2 == ref);
+    EXPECT_TRUE(0 == ref);
+    EXPECT_FALSE(4742 == ref);
+    ref = 4742;
+    EXPECT_TRUE(ref == 4742);
+    EXPECT_TRUE(4742 == ref);
+    EXPECT_FALSE(ref == ref2);
+    EXPECT_FALSE(ref2 == ref);
+}
+
+TEST(sparse_matrix, __reference__operatorNotEquals) {
+    sparse_matrix<int, 0> m;
+    sparse_matrix<int, 0>::reference ref(m, {47, 42});
+    sparse_matrix<int, 0>::reference ref2(m, {42, 47});
+
+    EXPECT_FALSE(ref != 0);
+    EXPECT_TRUE(ref != 4742);
+    EXPECT_FALSE(ref != ref2);
+    ref = 4742;
+    EXPECT_FALSE(ref != 4742);
+    EXPECT_TRUE(ref != ref2);
+}
+
+TEST(sparse_matrix, __reference__operatorAssign) {
+    sparse_matrix<int, 0> m;
+    sparse_matrix<int, 0>::reference ref(m, {42, 47});
+
+    EXPECT_EQ(0, (m[{42, 47}]));
+
+    ref = 4742;
+
+    EXPECT_EQ(4742, (m[{42, 47}]));
+}
+
 TEST(sparse_matrix, OperatorSubscript) {
     sparse_matrix<int, 0> m;
 
@@ -429,17 +471,8 @@ TEST(sparse_matrix, OperatorSubscript) {
     std::pair pos2{42, 47};
     EXPECT_EQ(0, (m[pos1]));
     EXPECT_EQ(0, (m[pos2]));
-}
 
-TEST(sparse_matrix, __reference__operatorAssign) {
-    sparse_matrix<int, 0> m;
-    sparse_matrix<int, 0>::reference ref(m, {42, 47});
-
-    EXPECT_EQ(0, (m[{42, 47}]));
-
-    ref = 4742;
-
-    EXPECT_EQ(4742, (m[{42, 47}]));
+    // TODO: test reference-ness
 }
 
 // --------------------- //

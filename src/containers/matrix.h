@@ -407,10 +407,10 @@ inline void print_color(matrix<pixel<num_channels>> const & mtx) {
     }
 }
 
-template<typename T, T defalt_value = T{}>
+template<typename T, T default_value = T{}>
 class sparse_matrix {
 private:
-    std::map<std::pair<size_t, size_t>, T> p_entries;
+    std::map<std::pair<size_t, size_t>, T> p_entries{};
 
 public:
     /// Reference to an element in the sparse_matrix that can be assigned to.
@@ -419,13 +419,13 @@ public:
     struct reference
     {
     private:
-        sparse_matrix<T, defalt_value>& p_target;
+        sparse_matrix<T, default_value>* p_target;
         std::pair<size_t, size_t> p_position;
     public:
         /// Creates a reference to `target`'s entry at `position`.
-        reference(sparse_matrix<T, defalt_value>& target, 
+        reference(sparse_matrix<T, default_value>& target, 
             std::pair<size_t, size_t> position)
-            : p_target(target)
+            : p_target(&target)
             , p_position(position)
         {}
 
@@ -434,14 +434,53 @@ public:
         /// TODO: make sure copy-and-swap makes sense here.
         T& operator=(T other)
         {
-            std::swap(p_target.p_entries[p_position], other);
-            return p_target.p_entries[p_position];
+            std::swap(p_target->p_entries[p_position], other);
+            return p_target->p_entries[p_position];
         }
 
-        // inline bool operator==(const reference& lhs, const reference& rhs){
-        //     return lhs.p_target[lhs.p_position] < rhs.p_target[rhs.p_position];
-        // }
-        // inline bool operator!=(const reference& lhs, const reference& rhs){ return !(lhs == rhs); }
+        friend inline bool operator==(
+            const reference& lhs,
+            const reference& rhs)
+        {
+            // check to avoid insertion
+            // if the element doesn't exist in either side, they are both
+            // defaulted, thus equal
+            if (lhs.p_target->p_entries.find(lhs.p_position) ==
+                std::end(lhs.p_target->p_entries))
+                return rhs.p_target->p_entries.find(rhs.p_position) ==
+                std::end(rhs.p_target->p_entries);
+            return lhs.p_target->p_entries[lhs.p_position] ==
+            rhs.p_target->p_entries[rhs.p_position]; }
+        friend inline bool operator==(
+            const reference& lhs,
+            const T& rhs)
+        {
+            // std::cout << "*p_target: " << lhs.p_target << " *p_entries: " << &lhs.p_target->p_entries << "\n";
+            // check to avoid insertion
+            if (lhs.p_target->p_entries.find(lhs.p_position) ==
+                std::end(lhs.p_target->p_entries)) return lhs == default_value;
+            return lhs.p_target->p_entries[lhs.p_position] == rhs; }
+        friend inline bool operator==(
+            const T& lhs,
+            const reference& rhs)
+        {
+            // check to avoid insertion
+            if (rhs.p_target->p_entries.find(rhs.p_position) ==
+                std::end(rhs.p_target->p_entries)) return rhs == default_value;
+            return lhs == rhs.p_target->p_entries[rhs.p_position]; }
+
+        friend inline bool operator!=(
+            const reference& lhs,
+            const reference& rhs)
+        { return !(lhs == rhs); }
+        friend inline bool operator!=(
+            const reference& lhs,
+            const T& rhs)
+        { return !(lhs == rhs); }
+        friend inline bool operator!=(
+            const T& lhs,
+            const reference& rhs)
+        { return !(lhs == rhs); }
 
         // friend bool operator<(const reference& l, const reference& r)
         // {
@@ -475,7 +514,7 @@ public:
      */
     T operator[](const std::pair<size_t, size_t>&& entry) const {
         auto found = p_entries.find(entry);
-        if (found == p_entries.end()) return defalt_value;
+        if (found == p_entries.end()) return default_value;
         return std::get<1>(*found);
     }
     reference operator[](const std::pair<size_t, size_t>&& entry) {
