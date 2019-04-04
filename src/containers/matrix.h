@@ -5,6 +5,7 @@
 
 #include <array>
 #include <vector>
+#include <map>
 #include <type_traits>
 #include <cmath>
 
@@ -96,8 +97,9 @@ public:
                 case overscan_mode::exception:
                 {
                     throw std::out_of_range(
-                        "Cannot access " + std::to_string(p_width) + "x" + std::to_string(p_height) +
-                        " matrix at (" + std::to_string(x) + ", " + std::to_string(y) + ")."
+                        "Cannot access " + std::to_string(p_width) + "x" +
+                        std::to_string(p_height) + " matrix at (" +
+                        std::to_string(x) + ", " + std::to_string(y) + ")."
                     );
                 }
                 default: break;
@@ -125,8 +127,9 @@ public:
                 case overscan_mode::exception:
                 {
                     throw std::out_of_range(
-                        "Cannot access " + std::to_string(p_width) + "x" + std::to_string(p_height) +
-                        " matrix at (" + std::to_string(x) + ", " + std::to_string(y) + ")."
+                        "Cannot access " + std::to_string(p_width) + "x" +
+                        std::to_string(p_height) + " matrix at (" +
+                        std::to_string(x) + ", " + std::to_string(y) + ")."
                     );
                 }
                 default: break;
@@ -174,7 +177,7 @@ public:
 
     /**
      * Adds a matrix to another.
-     * For now, adding matrices off differing sizes is undefined behavior/unsupported.
+     * For now, adding matrices off differing sizes is unsupported.
      */
     matrix& operator+= (const matrix<T>& rhs) {
         // todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
@@ -186,7 +189,7 @@ public:
 
     /**
      * Adds two matrices together.
-     * For now, adding matrices of differing sizes is undefined behavior/unsupported.
+     * For now, adding matrices of differing sizes is unsupported.
      */
     friend matrix operator+ (matrix<T> lhs, const matrix<T>& rhs) {
         lhs += rhs;
@@ -209,7 +212,7 @@ public:
 
     /**
      * Adds two matrices together.
-     * For now, adding matrices of differing sizes is undefined behavior/unsupported.
+     * For now, adding matrices of differing sizes is unsupported.
      */
     template<
         typename N,
@@ -222,10 +225,11 @@ public:
 
     /**
      * Subtracts a matrix from another.
-     * For now, subtracting matrices of differing sizes is undefined behavior/unsupported.
+     * For now, subtracting matrices of differing sizes is unsupported.
      */
     matrix& operator-= (const matrix<T>& rhs) {
-        // todo: iterate in a way that allows checking if rhs is defined at that particular position and to use 0 in that case
+        // todo: iterate in a way that allows checking if rhs is defined at that
+        // particular position and to use 0 in that case
         for (unsigned int i = 0; i < data.size(); ++i) {
             data[i] -= rhs.data[i];
         }
@@ -234,7 +238,7 @@ public:
 
     /**
      * Subtracts two matrices from one another.
-     * For now, subtracting matrices of differing sizes is undefined behavior/unsupported.
+     * For now, subtracting matrices of differing sizes is unsupported.
      */
     friend matrix operator- (matrix<T> lhs, const matrix<T>& rhs) {
         lhs -= rhs;
@@ -248,8 +252,6 @@ public:
     friend matrix<T> operator* (
         const matrix<T>& lhs, const matrix<T>& rhs
     ) {
-        // static_assert(rhs.p_height == lhs.p_width, "Righthand side matrix height must equal lefthand side matrix width.");
-
         matrix<T> result(rhs.p_width, lhs.p_height);
 
         // TODO: optimise cache locality of this
@@ -258,8 +260,11 @@ public:
         for (unsigned int line = 0; line < lhs.p_height; ++line) {
             // and for each, go through all the columns of the rhs
             for (unsigned int column = 0; column < rhs.p_width; ++column) {
-                T entry{}; // value-initialising type here to start off with something neutral
-                // go through each entry in their common dimension (lhs.widht == rhs.p_height) in other dimension that's currently being operated on
+                // start off with something neutral
+                T entry{};
+                // go through each entry in their common dimension
+                // (lhs.width == rhs.p_height) in other dimension that's
+                // currently being operated on
                 for (unsigned int i = 0; i < lhs.p_width; ++i) {
                     entry += lhs.at(i, line) * rhs.at(column, i);
                 }
@@ -284,14 +289,19 @@ public:
     }
 
     /**
-     * Runs a series of box blur filters over the image to approximate a gaussian blur.
+     * Runs a series of box blur filters over the image to approximate a
+     * gaussian blur.
      */
     matrix<T> fast_blur(float radius, unsigned int passes = 3) const {
-        // algorithm described here: http://blog.ivank.net/fastest-gaussian-blur.html (MIT license)
+        // algorithm described here:
+        // http://blog.ivank.net/fastest-gaussian-blur.html (MIT license)
         
-        // creates a vector of box-blur sizes for a given standard deviation sigma
-        // increasing n will approximate a true gaussian blur better but decrease performance
-        // TODO: get the box size right so a small sigma doesn't result in a massive blur radius
+        /// creates a vector of box-blur sizes for a given standard deviation
+        /// `sigma`.
+        /// increasing n will approximate a true gaussian blur better but
+        /// decrease performance.
+        // TODO: get the box size right so a small sigma doesn't result in a
+        // massive blur radius
         auto box_sizes = [=](float sigma, unsigned int n) {
             float w_ideal = std::sqrt((12 * sigma * sigma / n) + 1);
             float wl = std::floorf(w_ideal);
@@ -307,21 +317,24 @@ public:
             return sizes;
         };
 
+        // TODO: capture by reference instead?
         auto horizontal_blur = [=](matrix<T> const & mtx, float radius) {
             auto mtx_to_blur = mtx;
             auto r = std::round(radius);
             auto diameter = r + r + 1;
             for (unsigned int line = 0; line < mtx.height(); ++line) {
                 T accumulator{};
-                // calculate the first pixel's value -- TODO: can we avoid going over the negative values?
+                // calculate the first pixel's value
+                // TODO: can we avoid going over the negative values?
                 for (int offset = -r; offset <= r; ++offset) {
                     accumulator += mtx.at(offset, line, overscan_mode::repeat);
                 }
                 accumulator /= diameter;
                 mtx_to_blur.at(0, line, overscan_mode::repeat) = accumulator;
 
-                // calculate following pixel's values by subtracting left-most pixel within the radius
-                // and adding the one to the right of the right-most for each of the remaining pixels of the row
+                // calculate following pixel's values by subtracting left-most
+                // pixel within the radius and adding the one to the right of
+                // the right-most for each of the remaining pixels of the row.
                 for (unsigned int column = 1; column < mtx.width(); ++column) {
                     accumulator = accumulator -
                         (mtx.at(column - r - 1, line, overscan_mode::repeat) / diameter) +
@@ -361,7 +374,6 @@ public:
 };
 
 inline void print_greyscale(matrix<float> const & mtx) {
-    // \033[48;2;<r>;<g>;<b>m
     for (unsigned int y = 0; y < mtx.height(); ++y) {
         for (unsigned int x = 0; x < mtx.width(); ++x) {
             std::cout << "\033[48;2;" <<
@@ -381,28 +393,151 @@ inline void print_greyscale(matrix<float> const & mtx) {
 
 template<unsigned int num_channels = 3>
 inline void print_color(matrix<pixel<num_channels>> const & mtx) {
-    // \033[48;2;<r>;<g>;<b>m
     for (unsigned int y = 0; y < mtx.height(); ++y) {
         for (unsigned int x = 0; x < mtx.width(); ++x) {
             std::cout << "\033[48;2;" <<
             // set BG-colours
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) <<
             // set FG-colours
             ";38;2;" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
-            static_cast<int>(std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) << "m" << "  ";
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::red] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::green] * 255)) << ";" <<
+            static_cast<int>(
+                std::floor(mtx.at(x, y)[rgb_channel::blue] * 255)) << "m" <<
+            // print two spaces to get a mostly square "pixel"
+            "  ";
         }
+        // reset colours
         std::cout << "\033[0m" << std::endl;
     }
 }
 
+template<typename T, T default_value = T{}>
+class sparse_matrix {
+private:
+    std::map<std::pair<size_t, size_t>, T> p_entries{};
+
+public:
+    /// Reference to an element in the sparse_matrix that can be assigned to.
+    /// This is used as the return value of the non-const version of
+    /// sparse_matrix::operator[].
+    // TODO: factor this out in a way that allows references to sparse matrices
+    // of different default values to be compared (i.e. by taking it out of the
+    // template).
+    struct reference
+    {
+    private:
+        sparse_matrix<T, default_value>* p_target;
+        std::pair<size_t, size_t> p_position;
+    public:
+        /// Creates a reference to `target`'s entry at `position`.
+        reference(sparse_matrix<T, default_value>& target, 
+            std::pair<size_t, size_t> position)
+            : p_target(&target)
+            , p_position(position)
+        {}
+
+        /// Assigns the value of `other` to the entry of this reference's target
+        /// at the position held by this reference.
+        /// TODO: make sure copy-and-swap makes sense here.
+        T& operator=(T other)
+        {
+            std::swap(p_target->p_entries[p_position], other);
+            return p_target->p_entries[p_position];
+        }
+
+        operator T() const
+        {
+            // check to avoid insertion into entries map
+            if (p_target->p_entries.find(p_position) ==
+                std::end(p_target->p_entries)) return default_value;
+            return p_target->p_entries[p_position];
+        }
+
+        friend inline bool operator==(
+            const reference& lhs,
+            const reference& rhs)
+        {
+            // check to avoid insertion into entries map
+            // if the element doesn't exist in either side, they are both
+            // defaulted, thus equal
+            auto lhs_found = lhs.p_target->p_entries.find(lhs.p_position);
+            auto rhs_found = rhs.p_target->p_entries.find(rhs.p_position);
+            // if both sides do not contain the element, they are defaulted,
+            // thus equal.
+            if (lhs_found == std::end(lhs.p_target->p_entries) &&
+                rhs_found == std::end(rhs.p_target->p_entries))
+                return true;
+            // if only one side is defaulted, they are equal if the
+            // non-defaulted side is equal to the default
+            if (lhs_found == std::end(lhs.p_target->p_entries))
+                return rhs_found->second == default_value;
+            if (rhs_found == std::end(rhs.p_target->p_entries))
+                return lhs_found->second == default_value;
+            // if neither side is defaulted, they are compared directly
+            return lhs_found->second == rhs_found->second;
+        }
+        friend inline bool operator==(
+            const reference& lhs,
+            const T& rhs)
+        {
+            // check to avoid insertion into entries map
+            if (lhs.p_target->p_entries.find(lhs.p_position) ==
+                std::end(lhs.p_target->p_entries)) return rhs == default_value;
+            return lhs.p_target->p_entries[lhs.p_position] == rhs; }
+        friend inline bool operator==(
+            const T& lhs,
+            const reference& rhs)
+        {
+            // check to avoid insertion into entries map
+            if (rhs.p_target->p_entries.find(rhs.p_position) ==
+                std::end(rhs.p_target->p_entries)) return lhs == default_value;
+            return lhs == rhs.p_target->p_entries[rhs.p_position]; }
+
+        friend inline bool operator!=(
+            const reference& lhs,
+            const reference& rhs)
+        { return !(lhs == rhs); }
+        friend inline bool operator!=(
+            const reference& lhs,
+            const T& rhs)
+        { return !(lhs == rhs); }
+        friend inline bool operator!=(
+            const T& lhs,
+            const reference& rhs)
+        { return !(lhs == rhs); }
+    };
+
+    /**
+     * Returns a `static_matrix::reference` to the element at the position
+     * specified by the pair.
+     * TODO: check if rvalue ref argument really always works.
+     */
+    reference operator[](const std::pair<size_t, size_t>&& entry) {
+        return reference(*this, entry);
+    }
+    const reference operator[](const std::pair<size_t, size_t>&& entry) const {
+        return reference(*this, entry);
+    }
+
+    const std::map<std::pair<size_t, size_t>, T>& entries() const {
+        return p_entries;
+    }
+};
+
 /**
  * Generic matrix class.
- * This class assumes that `T` is a number-like type providing the mathematical operators +, -, * and /.
- * Empty value initialisation T{} should initialise the type with a 'zero value'.
+ * This class assumes that `T` is a number-like type providing the mathematical
+ * operators +, -, * and /.
+ * Empty value initialisation T{} should initialise the type with a
+ * 'zero value'.
  */
 template <class T, unsigned int w = 1, unsigned int h = 1>
 class static_matrix {
@@ -428,7 +563,8 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr const T& at () const {
         // bounds checking
-        static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside static_matrix.");
+        static_assert(y * w + x + 1 <= w * h,
+            "Cannot access coordinates outside static_matrix.");
         return data[y * w + x];
     }
 
@@ -439,7 +575,8 @@ public:
     template <const unsigned int x, const unsigned int y>
     constexpr T& at () {
         // bounds checking
-        static_assert(y * w + x + 1 <= w * h, "Cannot access coordinates outside static_matrix.");
+        static_assert(y * w + x + 1 <= w * h,
+            "Cannot access coordinates outside static_matrix.");
         return data[y * w + x];
     }
 
