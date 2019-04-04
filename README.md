@@ -1,8 +1,6 @@
 # Spice Engine
 An image processor utilising node-based, composable recipes.
 
-You can use this code under the terms of the [GNU LGPL, v3](<https://www.gnu.org/copyleft/lesser.html>).
-
 This project is under heavy development and things will break without warning in regular, short intervals. The code is also not necessarily (or at all) production ready, so do make sure to read and understand all of it before you use it.
 
 Note that this README is not necessarily up-to-date with the current state of the code while the project is in development. At the moment you could call it a reflection of what recent-past-me thought the project would be in the near future.
@@ -11,7 +9,7 @@ Part of the documentation provided here can also be seen as a roadmap for future
 
 ## Usage
 
-To run the tests, you will have to install Google Test. You will most likely also have to change the path to it in CMakeLists.txt - I have not yet gotten around to properly setting up the build system (and also have a lot to learn in that regard). Once that's set up, though, there's a little script called `spice_build.sh` to save you some typing.
+To run the tests, you will have to install Google Test. You will most likely also have to change the path to it in CMakeLists.txt - I have not yet gotten around to properly setting up the build system (and also have a lot to learn in that regard). Once that's set up, though, there's a little script called `spice_build.sh` to save you some typing. It takes one positional argument (`Debug` or `Release`) to specify if you want a debug or a release build.
 
 Since I wanted to play with the newest features, Spice is based on the C++17 standard and will probably not work with anything else.
 
