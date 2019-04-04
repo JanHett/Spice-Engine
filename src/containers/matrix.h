@@ -455,10 +455,9 @@ public:
             const reference& lhs,
             const T& rhs)
         {
-            // std::cout << "*p_target: " << lhs.p_target << " *p_entries: " << &lhs.p_target->p_entries << "\n";
             // check to avoid insertion
             if (lhs.p_target->p_entries.find(lhs.p_position) ==
-                std::end(lhs.p_target->p_entries)) return lhs == default_value;
+                std::end(lhs.p_target->p_entries)) return rhs == default_value;
             return lhs.p_target->p_entries[lhs.p_position] == rhs; }
         friend inline bool operator==(
             const T& lhs,
@@ -466,7 +465,7 @@ public:
         {
             // check to avoid insertion
             if (rhs.p_target->p_entries.find(rhs.p_position) ==
-                std::end(rhs.p_target->p_entries)) return rhs == default_value;
+                std::end(rhs.p_target->p_entries)) return lhs == default_value;
             return lhs == rhs.p_target->p_entries[rhs.p_position]; }
 
         friend inline bool operator!=(
