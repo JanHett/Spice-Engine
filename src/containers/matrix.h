@@ -416,6 +416,9 @@ public:
     /// Reference to an element in the sparse_matrix that can be assigned to.
     /// This is used as the return value of the non-const version of
     /// sparse_matrix::operator[].
+    // TODO: factor this out in a way that allows references to sparse matrices
+    // of different default values to be compared (i.e. by taking it out of the
+    // template).
     struct reference
     {
     private:
@@ -438,24 +441,42 @@ public:
             return p_target->p_entries[p_position];
         }
 
+        operator T() const
+        {
+            // check to avoid insertion into entries map
+            if (p_target->p_entries.find(p_position) ==
+                std::end(p_target->p_entries)) return default_value;
+            return p_target->p_entries[p_position];
+        }
+
         friend inline bool operator==(
             const reference& lhs,
             const reference& rhs)
         {
-            // check to avoid insertion
+            // check to avoid insertion into entries map
             // if the element doesn't exist in either side, they are both
             // defaulted, thus equal
-            if (lhs.p_target->p_entries.find(lhs.p_position) ==
-                std::end(lhs.p_target->p_entries))
-                return rhs.p_target->p_entries.find(rhs.p_position) ==
-                std::end(rhs.p_target->p_entries);
-            return lhs.p_target->p_entries[lhs.p_position] ==
-            rhs.p_target->p_entries[rhs.p_position]; }
+            auto lhs_found = lhs.p_target->p_entries.find(lhs.p_position);
+            auto rhs_found = rhs.p_target->p_entries.find(rhs.p_position);
+            // if both sides do not contain the element, they are defaulted,
+            // thus equal.
+            if (lhs_found == std::end(lhs.p_target->p_entries) &&
+                rhs_found == std::end(rhs.p_target->p_entries))
+                return true;
+            // if only one side is defaulted, they are equal if the
+            // non-defaulted side is equal to the default
+            if (lhs_found == std::end(lhs.p_target->p_entries))
+                return lhs_found->second == default_value;
+            if (rhs_found == std::end(rhs.p_target->p_entries))
+                return rhs_found->second == default_value;
+            // if neither side is defaulted, they are compared directly
+            return lhs_found->second == rhs_found->second;
+        }
         friend inline bool operator==(
             const reference& lhs,
             const T& rhs)
         {
-            // check to avoid insertion
+            // check to avoid insertion into entries map
             if (lhs.p_target->p_entries.find(lhs.p_position) ==
                 std::end(lhs.p_target->p_entries)) return rhs == default_value;
             return lhs.p_target->p_entries[lhs.p_position] == rhs; }
@@ -463,7 +484,7 @@ public:
             const T& lhs,
             const reference& rhs)
         {
-            // check to avoid insertion
+            // check to avoid insertion into entries map
             if (rhs.p_target->p_entries.find(rhs.p_position) ==
                 std::end(rhs.p_target->p_entries)) return lhs == default_value;
             return lhs == rhs.p_target->p_entries[rhs.p_position]; }
@@ -480,44 +501,22 @@ public:
             const T& lhs,
             const reference& rhs)
         { return !(lhs == rhs); }
-
-        // friend bool operator<(const reference& l, const reference& r)
-        // {
-        //     return l.p_target[l.p_position] < r.p_target[r.p_position];
-        // }
-
-        // friend bool operator<(const reference& l, const T& r)
-        // {
-        //     return l.p_target[l.p_position] < r;
-        // }
-        // inline bool operator> (const reference& lhs, const reference& rhs)
-        // { return rhs < lhs; }
-        // inline bool operator> (const reference& lhs, const T& rhs)
-        // { return rhs < lhs; }
-        // inline bool operator<=(const reference& lhs, const reference& rhs)
-        // { return !(lhs > rhs); }
-        // inline bool operator<=(const reference& lhs, const T& rhs)
-        // { return !(lhs > rhs); }
-        // inline bool operator>=(const reference& lhs, const reference& rhs)
-        // { return !(lhs < rhs); }
-        // inline bool operator>=(const reference& lhs, const T& rhs)
-        // { return !(lhs < rhs); }
-
     };
 
     /**
-     * Returns the element at the position specified by the pair.
-     * If this position has no set value, the default is returned.
-     * TODO: make non-const version retuning a T&, check if rvalue version
-     * really always works.
+     * Returns a `static_matrix::reference` to the element at the position
+     * specified by the pair.
+     * TODO: check if rvalue ref argument really always works.
      */
-    T operator[](const std::pair<size_t, size_t>&& entry) const {
-        auto found = p_entries.find(entry);
-        if (found == p_entries.end()) return default_value;
-        return std::get<1>(*found);
-    }
     reference operator[](const std::pair<size_t, size_t>&& entry) {
         return reference(*this, entry);
+    }
+    const reference operator[](const std::pair<size_t, size_t>&& entry) const {
+        return reference(*this, entry);
+    }
+
+    const std::map<std::pair<size_t, size_t>, T>& entries() const {
+        return p_entries;
     }
 };
 

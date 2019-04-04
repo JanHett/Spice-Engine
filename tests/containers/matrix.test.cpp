@@ -428,6 +428,7 @@ TEST(sparse_matrix, __reference__operatorEquals) {
     EXPECT_FALSE(4742 == ref);
     EXPECT_TRUE(ref == ref2);
     EXPECT_TRUE(ref2 == ref);
+    EXPECT_EQ(0, m.entries().size());
     ref = 4742;
     EXPECT_TRUE(ref == 4742);
     EXPECT_TRUE(4742 == ref);
@@ -435,6 +436,7 @@ TEST(sparse_matrix, __reference__operatorEquals) {
     EXPECT_FALSE(0 == ref);
     EXPECT_FALSE(ref == ref2);
     EXPECT_FALSE(ref2 == ref);
+    EXPECT_EQ(1, m.entries().size());
 }
 
 TEST(sparse_matrix, __reference__operatorNotEquals) {
@@ -448,6 +450,7 @@ TEST(sparse_matrix, __reference__operatorNotEquals) {
     EXPECT_TRUE(4742 != ref);
     EXPECT_FALSE(ref != ref2);
     EXPECT_FALSE(ref2 != ref);
+    EXPECT_EQ(0, m.entries().size());
     ref = 4742;
     EXPECT_FALSE(ref != 4742);
     EXPECT_FALSE(4742 != ref);
@@ -455,6 +458,7 @@ TEST(sparse_matrix, __reference__operatorNotEquals) {
     EXPECT_TRUE(0 != ref);
     EXPECT_TRUE(ref != ref2);
     EXPECT_TRUE(ref2 != ref);
+    EXPECT_EQ(1, m.entries().size());
 }
 
 TEST(sparse_matrix, __reference__operatorAssign) {
@@ -462,10 +466,20 @@ TEST(sparse_matrix, __reference__operatorAssign) {
     sparse_matrix<int, 0>::reference ref(m, {42, 47});
 
     EXPECT_EQ(0, (m[{42, 47}]));
-
     ref = 4742;
-
     EXPECT_EQ(4742, (m[{42, 47}]));
+}
+
+TEST(sparse_matrix, __reference__operatorConversionT) {
+    sparse_matrix<int, 0> m;
+    sparse_matrix<int, 0>::reference ref(m, {42, 47});
+    ref = 4742;
+    int i = 0;
+
+    EXPECT_EQ(0, i);
+    i = ref;
+    EXPECT_EQ(4742, i);
+    EXPECT_EQ(1, m.entries().size());
 }
 
 TEST(sparse_matrix, OperatorSubscript) {
@@ -480,8 +494,13 @@ TEST(sparse_matrix, OperatorSubscript) {
     std::pair pos2{42, 47};
     EXPECT_EQ(0, (m[pos1]));
     EXPECT_EQ(0, (m[pos2]));
+    EXPECT_EQ(0, m.entries().size());
 
-    // TODO: test reference-ness
+    m[pos1] = 123;
+    m[pos2] = 456;
+    EXPECT_EQ(123, (m[pos1]));
+    EXPECT_EQ(456, (m[{42, 47}]));
+    EXPECT_EQ(2, m.entries().size());
 }
 
 // --------------------- //
