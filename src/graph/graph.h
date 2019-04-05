@@ -5,6 +5,10 @@
 
 #include "./node.h"
 
+/// A graph manages a collection of nodes and keeps a record of connections in
+/// the form of a distance matrix. This means that a graph is aware of which
+/// individual nodes are connected, but it does not concern itself with the
+/// specificities of the data flow (i.e. which outputs are connected).
 class graph {
 private:
     std::vector<std::unique_ptr<basic_node>> p_nodes;

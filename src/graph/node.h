@@ -114,52 +114,36 @@ public:
     //
 
     constexpr InputTuple const& inputs() const
-    {
-        return p_inputs;
-    }
+    { return p_inputs; }
 
     template <unsigned int index>
     constexpr auto const& inputs() const
-    {
-        return std::get<index>(p_inputs);
-    }
+    { return std::get<index>(p_inputs); }
 
     constexpr OutputTuple const& outputs() const
-    {
-        return p_outputs;
-    }
+    { return p_outputs; }
 
     template <unsigned int index>
     constexpr auto const& outputs() const
-    {
-        return std::get<index>(p_outputs);
-    }
+    { return std::get<index>(p_outputs); }
 
     //
     // non-const i/o getters
     //
 
     constexpr InputTuple& inputs()
-    {
-        return p_inputs;
-    }
+    { return p_inputs; }
 
     template <unsigned int index>
     constexpr auto& inputs()
-    {
-        return std::get<index>(p_inputs);
-    }
+    { return std::get<index>(p_inputs); }
 
     constexpr OutputTuple& outputs()
-    {
-        return p_outputs;
-    }
+    { return p_outputs; }
 
     template <unsigned int index>
     constexpr auto& outputs()
-    {
-        return std::get<index>(p_outputs);
-    }
+    { return std::get<index>(p_outputs); }
 
     //
     // subscription management

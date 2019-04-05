@@ -503,6 +503,21 @@ TEST(sparse_matrix, OperatorSubscript) {
     EXPECT_EQ(2, m.entries().size());
 }
 
+TEST(sparse_matrix, size) {
+    sparse_matrix<int, 0, int> m;
+    m[{-1, 3}] = 42;
+    m[{ 1, 2}] = 47;
+    EXPECT_EQ((std::pair{3, 2}), m.size());
+    m[{-666, -333}] = 42;
+    EXPECT_EQ((std::pair{668, 337}), m.size());
+
+
+    sparse_matrix<int, 0, int> negative_m;
+    negative_m[{-42, -5}] = 42;
+    negative_m[{ -1, -47}] = 47;
+    EXPECT_EQ((std::pair{42, 43}), negative_m.size());
+}
+
 // --------------------- //
 //     static_matrix     //
 // --------------------- //

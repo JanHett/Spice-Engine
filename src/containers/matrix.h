@@ -419,10 +419,12 @@ inline void print_color(matrix<pixel<num_channels>> const & mtx) {
     }
 }
 
-template<typename T, T default_value = T{}>
+/// A sparse_matrix is an unbounded matrix that is optimised to contain mostly
+/// default elements.
+template<typename T, T default_value = T{}, typename CoordinateT = size_t>
 class sparse_matrix {
 private:
-    std::map<std::pair<size_t, size_t>, T> p_entries{};
+    std::map<std::pair<CoordinateT, CoordinateT>, T> p_entries{};
 
 public:
     /// Reference to an element in the sparse_matrix that can be assigned to.
@@ -434,12 +436,12 @@ public:
     struct reference
     {
     private:
-        sparse_matrix<T, default_value>* p_target;
-        std::pair<size_t, size_t> p_position;
+        sparse_matrix<T, default_value, CoordinateT>* p_target;
+        std::pair<CoordinateT, CoordinateT> p_position;
     public:
         /// Creates a reference to `target`'s entry at `position`.
-        reference(sparse_matrix<T, default_value>& target, 
-            std::pair<size_t, size_t> position)
+        reference(sparse_matrix<T, default_value, CoordinateT>& target, 
+            std::pair<CoordinateT, CoordinateT> position)
             : p_target(&target)
             , p_position(position)
         {}
@@ -520,15 +522,44 @@ public:
      * specified by the pair.
      * TODO: check if rvalue ref argument really always works.
      */
-    reference operator[](const std::pair<size_t, size_t>&& entry) {
+    reference operator[](const std::pair<CoordinateT, CoordinateT>&& entry) {
         return reference(*this, entry);
     }
-    const reference operator[](const std::pair<size_t, size_t>&& entry) const {
+    const reference operator[](
+        const std::pair<CoordinateT, CoordinateT>&& entry) const {
         return reference(*this, entry);
     }
 
-    const std::map<std::pair<size_t, size_t>, T>& entries() const {
+    const std::map<std::pair<CoordinateT, CoordinateT>, T>& entries() const {
         return p_entries;
+    }
+
+    /// Returns the current size of the sparse_matrix as defined by the width
+    /// and height of the bounding box.
+    /// E.g. a sparse_matrix containing an element at { -1, 3 } and one at
+    /// { 1, 2 } would have a size of { 3, 2 }.
+    /// Since this function has to iterate through the entire matrix, it is much
+    /// more expensive than a call to `size()` on other containers, namely O(N)
+    /// where N is the number of non-defaulted entries.
+    //  TODO: always return size_t pair? Might help for smaller types, but
+    //  hinder for larger types.
+    std::pair<CoordinateT, CoordinateT> size() const {
+        if (p_entries.empty()) return {0, 0};
+        // find min and max x by leveraging the ordering of the elements
+        auto min_x = p_entries.begin()->first.first;
+        auto max_x = std::prev(p_entries.end())->first.first;
+        // find min and max y
+        auto it = p_entries.begin();
+        CoordinateT min_y = it->first.second;
+        CoordinateT max_y = it->first.second;
+        ++it;
+        for ( ; it != p_entries.end(); ++it) {
+            if (it->first.second < min_y)
+                min_y = it->first.second;
+            else if (it->first.second > max_y)
+                max_y = it->first.second;
+        }
+        return { 1 + (max_x - min_x), 1 + (max_y - min_y) };
     }
 };
 
