@@ -105,6 +105,16 @@ public:
         lhs /= rhs;
         return lhs;
     }
+
+    friend bool operator==(const pixel<num_channels>& lhs,
+        const pixel<num_channels>& rhs)
+    {
+        for (size_t i = 0; i < lhs.data.size(); ++i)
+            if (lhs.data[i] != rhs.data[i]) return false;
+        return true;
+    }
+    friend bool operator!=(const pixel<num_channels>& lhs,
+        const pixel<num_channels>& rhs){ return !(lhs == rhs); }
 };
 
 template <unsigned int num_channels>

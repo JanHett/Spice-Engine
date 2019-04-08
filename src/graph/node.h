@@ -321,6 +321,7 @@ public:
 
     bool apply()
     {
+        if (in_image == nullptr) return false;
         out_image.set(in_image->fast_blur(*ctrl_radius, *ctrl_passes));
         return false;
     }
@@ -346,6 +347,74 @@ public:
     bool apply()
     {
         print_color(*inputs<0>());
+        return true;
+    }
+};
+
+class crop : public node<
+                        std::tuple<
+                            rgb_image*,
+                            size_t*,
+                            size_t*,
+                            size_t*,
+                            size_t*
+                        >,
+                        std::tuple<observable<rgb_image>>> {
+private:
+    rgb_image*& in_image;
+    size_t*& x;
+    size_t*& y;
+    size_t*& width;
+    size_t*& height;
+    observable<rgb_image>& out_image;
+public:
+    // TODO: add parameters for size etc...
+    crop(const char* id)
+        : node(
+            id,
+            { // inputs
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr
+            },
+            { // outputs
+                observable<rgb_image> {} })
+        , in_image(std::get<0>(p_inputs))
+        , x(std::get<1>(p_inputs))
+        , y(std::get<2>(p_inputs))
+        , width(std::get<3>(p_inputs))
+        , height(std::get<4>(p_inputs))
+        , out_image(std::get<0>(p_outputs))
+    {
+    }
+
+    bool apply()
+    {
+        if (in_image == nullptr ||
+            x == nullptr ||
+            y == nullptr ||
+            width == nullptr ||
+            height == nullptr ||
+            *width < 1 ||
+            *height < 1 ||
+            *x + *width > in_image->width() ||
+            *y + *height > in_image->height()) return false;
+
+        rgb_image result(*width, *height);
+        result.data.reserve(*width * *height);
+        size_t new_ln = 0;
+        for (size_t ln = *y; ln < (*y + *height); ++ln) {
+            std::cout << "Copying from " << in_image->width() * *y + *x << " - " << in_image->width() * *y + *x + *width <<
+            " to " << new_ln * *width << '\n';
+            std::copy(
+                &in_image->data.data()[in_image->width() * *y + *x],
+                &in_image->data.data()[in_image->width() * *y + *x + *width],
+                &result.data.data()[new_ln * *width]);
+            ++new_ln;
+        }
+        out_image.set(std::move(result));
         return true;
     }
 };

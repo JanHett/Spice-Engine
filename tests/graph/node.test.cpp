@@ -184,6 +184,36 @@ TEST(node__out_stream, constructor) {
     os_node.apply();
 }
 
+TEST(node__crop, constructor) {
+    loader l("MyLoader", "../tests/_data/checker_3x3.pbm");
+    
+    observable<size_t> m_x;
+    m_x.set(0);
+    observable<size_t> m_y;
+    m_y.set(1);
+    observable<size_t> m_width;
+    m_width.set(2);
+    observable<size_t> m_height;
+    m_height.set(2);
+    crop c("MyCrop");
+    c.subscribe<0>(l.outputs<0>());
+    
+    EXPECT_FALSE(c.apply());
+
+    c.subscribe<1>(m_x);
+    c.subscribe<2>(m_y);
+    c.subscribe<3>(m_width);
+    c.subscribe<4>(m_height);
+
+    EXPECT_TRUE(c.apply());
+    // TODO: create observable-checker and check the output
+
+    out_stream os_node("MyOutStream");
+    os_node.subscribe<0>(c.outputs<0>());
+
+    os_node.apply();
+}
+
 /* TEST(node__fast_blur, ConstructorEmpty) {
     fast_blur fb("MyBlur");
 

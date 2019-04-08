@@ -281,3 +281,33 @@ TEST(Pixel, OperatorDivide) {
 	EXPECT_EQ(0.25, pxl2[1]);
 	EXPECT_EQ(0.125, pxl2[2]);
 }
+
+TEST(Pixel, OperatorEquals) {
+	pixel<3> pxl1({0.5, 0.5, 0.5});
+	pixel<3> pxl2({0.5, 0.25, 0.125});
+	pixel<3> pxl3({0.5, 0.25, 0.125});
+	pixel<3> pxl4({0.5, 0.25, 0.125});
+
+	EXPECT_TRUE(pxl2 == pxl3);
+	EXPECT_TRUE(pxl2 == pxl4);
+	EXPECT_TRUE(pxl3 == pxl4);
+	EXPECT_TRUE(pxl2 == pxl2);
+
+	EXPECT_FALSE(pxl1 == pxl2);
+	EXPECT_FALSE(pxl2 == pxl1);
+}
+
+TEST(Pixel, OperatorNotEquals) {
+	pixel<3> pxl1({0.5, 0.5, 0.5});
+	pixel<3> pxl2({0.5, 0.25, 0.125});
+	pixel<3> pxl3({0.5, 0.25, 0.125});
+	pixel<3> pxl4({0.5, 0.25, 0.125});
+
+	EXPECT_FALSE(pxl2 != pxl3);
+	EXPECT_FALSE(pxl2 != pxl4);
+	EXPECT_FALSE(pxl3 != pxl4);
+	EXPECT_FALSE(pxl2 != pxl2);
+
+	EXPECT_TRUE(pxl1 != pxl2);
+	EXPECT_TRUE(pxl2 != pxl1);
+}
