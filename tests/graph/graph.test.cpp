@@ -12,87 +12,72 @@ TEST(graph, create_node) {
     EXPECT_EQ(0, g.size());
 
     auto node_id = "my_basic_node";
-    auto n = g.create_node<basic_node>(node_id);
+    auto& n = g.create_node<basic_node>(node_id);
 
     EXPECT_EQ(1, g.size());
-    EXPECT_TRUE((std::is_same<std::shared_ptr<basic_node>, decltype(n)>::value));
-    EXPECT_EQ(2, n.use_count());
+    static_assert((std::is_same<basic_node&,
+        decltype(n)>::value), "create_node did not return a reference");
 
-    auto loader_n = g.create_node<loader>("my_loader");
+    auto& loader_n = g.create_node<loader>("my_loader");
     EXPECT_EQ(2, g.size());
-    EXPECT_TRUE((std::is_same<std::shared_ptr<loader>, decltype(loader_n)>::value));
-    EXPECT_EQ(2, loader_n.use_count());
+    static_assert((std::is_same<loader&,
+        decltype(loader_n)>::value), "create_node did not return a reference");
 }
 
 TEST(graph, register_node) {
     graph g;
     EXPECT_EQ(0, g.size());
 
-    auto n = std::make_shared<basic_node>("my_basic_node");
-    EXPECT_EQ(1, n.use_count());
-    auto registered = g.register_node(n);
+    auto n = std::make_unique<basic_node>("my_basic_node");
+    auto registered = g.register_node(std::move(n));
     EXPECT_EQ(1, g.size());
     EXPECT_TRUE(registered);
-    EXPECT_EQ(2, n.use_count());
 
-    auto registered_again = g.register_node(n);
-    EXPECT_EQ(1, g.size());
-    EXPECT_FALSE(registered_again);
-    EXPECT_EQ(2, n.use_count());
-
-    auto ds = std::make_shared<data_sink_t>();
+    auto ds = std::make_unique<data_sink_t>();
     EXPECT_EQ(1, g.size());
     EXPECT_EQ(0, g.data_sinks().size());
-    EXPECT_EQ(1, ds.use_count());
-    auto registered_ds = g.register_node(ds);
+    auto registered_ds = g.register_node(std::move(ds));
     EXPECT_EQ(2, g.size());
     EXPECT_EQ(1, g.data_sinks().size());
     EXPECT_TRUE(registered_ds);
-    EXPECT_EQ(3, ds.use_count());
 }
 
 TEST(graph, deregister_node) {
     graph g;
     EXPECT_EQ(0, g.size());
 
-    auto n = std::make_shared<basic_node>("my_basic_node");
-    EXPECT_EQ(1, n.use_count());
-    auto deregistered = g.deregister_node(n);
+    auto n = std::make_unique<basic_node>("my_basic_node");
+    auto n_ptr = n.get();
+    auto deregistered = g.deregister_node(*n_ptr);
     EXPECT_EQ(0, g.size());
     EXPECT_FALSE(deregistered);
-    EXPECT_EQ(1, n.use_count());
 
-    auto registered = g.register_node(n);
+    auto registered = g.register_node(std::move(n));
     EXPECT_EQ(1, g.size());
     EXPECT_TRUE(registered);
-    EXPECT_EQ(2, n.use_count());
 
-    auto deregistered_again = g.deregister_node(n);
+    auto deregistered_again = g.deregister_node(*n_ptr);
     EXPECT_EQ(0, g.size());
     EXPECT_TRUE(deregistered_again);
-    EXPECT_EQ(1, n.use_count());
 
     // check data sink peculiarities
-    auto ds = std::make_shared<data_sink_t>();
+    auto ds = std::make_unique<data_sink_t>();
+    auto ds_ptr = ds.get();
     EXPECT_EQ(0, g.size());
     EXPECT_EQ(0, g.data_sinks().size());
-    EXPECT_EQ(1, ds.use_count());
 
-    auto deregistered_ds = g.deregister_node(ds);
+    auto deregistered_ds = g.deregister_node(*ds_ptr);
     EXPECT_EQ(0, g.size());
     EXPECT_FALSE(deregistered_ds);
     EXPECT_EQ(0, g.data_sinks().size());
-    EXPECT_EQ(1, ds.use_count());
 
-    auto registered_ds = g.register_node(ds);
+    auto registered_ds = g.register_node(std::move(ds));
     EXPECT_EQ(1, g.size());
     EXPECT_EQ(1, g.data_sinks().size());
     EXPECT_TRUE(registered_ds);
-    EXPECT_EQ(3, ds.use_count());
 
-    auto deregistered_ds_again = g.deregister_node(ds);
+    auto deregistered_ds_again = g.deregister_node(*ds_ptr);
     EXPECT_EQ(0, g.size());
     EXPECT_EQ(0, g.data_sinks().size());
     EXPECT_TRUE(deregistered_ds_again);
-    EXPECT_EQ(1, ds.use_count());
 }
