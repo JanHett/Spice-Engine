@@ -406,11 +406,9 @@ public:
         result.data.reserve(*width * *height);
         size_t new_ln = 0;
         for (size_t ln = *y; ln < (*y + *height); ++ln) {
-            std::cout << "Copying from " << in_image->width() * *y + *x << " - " << in_image->width() * *y + *x + *width <<
-            " to " << new_ln * *width << '\n';
             std::copy(
-                &in_image->data.data()[in_image->width() * *y + *x],
-                &in_image->data.data()[in_image->width() * *y + *x + *width],
+                &in_image->data.data()[in_image->width() * ln + *x],
+                &in_image->data.data()[in_image->width() * ln + *x + *width],
                 &result.data.data()[new_ln * *width]);
             ++new_ln;
         }
