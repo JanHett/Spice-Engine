@@ -2,8 +2,45 @@
 #define SPICE_RX_FUNCTION
 
 #include <type_traits>
+#include <tuple>
+#include <optional>
+#include <variant>
 
 #include "./observable.h"
+
+struct key_not_found_t {};
+
+template<typename K, typename ... Vs>
+class tuple_map {
+private:
+    std::tuple<
+        std::pair<std::optional<K>, key_not_found_t>,
+        std::pair<std::optional<K>, std::optional<Vs>>...> p_map;
+
+public:
+    tuple_map(): p_map({
+        {{}, key_not_found_t()},
+        {{}, std::optional<Vs>{}}...}) {}
+
+    tuple_map(std::pair<K, Vs> ... values): p_map({
+        {{}, key_not_found_t()},
+        {{values.first}, std::optional<Vs>{values.second}}...}) {}
+
+    // TODO: replace std::any with type-safer option
+    template<size_t Idx = 1>
+    constexpr std::variant<key_not_found_t, std::optional<Vs>...> operator[] (const K & key) {
+        if (std::tuple_size<decltype(p_map)>::value < Idx)
+            return operator[]<0>(key);
+        else if (std::get<Idx>(p_map).first &&
+            *std::get<Idx>(p_map).first == key)
+            return std::get<Idx>(p_map).second;
+        else return operator[]<Idx + 1>(key);
+    }
+
+    constexpr const auto data() const {
+        return p_map;
+    }
+};
 
 template<typename arg_enum, typename function_t>
 class _rx_function {
