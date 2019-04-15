@@ -65,7 +65,7 @@ TEST(tuple_map, constructor) {
 }
 
 TEST(tuple_map, operatorSubscript) {
-    tuple_map<const char *, int, float, std::string> tm(
+    tuple_map<std::string, int, float, std::string> tm(
         {"The answer", 42,},
         {"The exact answer", 42.47,},
         {"The honest answer", "The cake is a lie"}

@@ -17,6 +17,28 @@ private:
         std::pair<std::optional<K>, key_not_found_t>,
         std::pair<std::optional<K>, std::optional<Vs>>...> p_map;
 
+    template<
+        size_t Idx = 1,
+        typename std::enable_if<
+            Idx < std::tuple_size<decltype(p_map)>::value, int>::type = 0>
+    constexpr std::variant<key_not_found_t, std::optional<Vs>...> operator_subscript_impl_ (
+        const K & key)
+    {
+        if (std::get<Idx>(p_map).first &&
+            (*std::get<Idx>(p_map).first) == key)
+            return std::get<Idx>(p_map).second;
+        return operator_subscript_impl_<Idx + 1>(key);
+    }
+
+    template<
+        size_t Idx,
+        typename std::enable_if<
+            !(Idx < std::tuple_size<decltype(p_map)>::value), int>::type = 0>
+    constexpr key_not_found_t operator_subscript_impl_ (
+        const K & key)
+    {
+        return std::get<0>(p_map).second;
+    }
 public:
     tuple_map(): p_map({
         {{}, key_not_found_t()},
@@ -26,19 +48,36 @@ public:
         {{}, key_not_found_t()},
         {{values.first}, std::optional<Vs>{values.second}}...}) {}
 
-    // TODO: replace std::any with type-safer option
-    template<size_t Idx = 1>
-    constexpr std::variant<key_not_found_t, std::optional<Vs>...> operator[] (const K & key) {
-        if (std::tuple_size<decltype(p_map)>::value < Idx)
-            return operator[]<0>(key);
-        else if (std::get<Idx>(p_map).first &&
-            *std::get<Idx>(p_map).first == key)
-            return std::get<Idx>(p_map).second;
-        else return operator[]<Idx + 1>(key);
+    constexpr auto operator[] (
+        const K & key)
+    {
+        auto val = operator_subscript_impl_(key);
+        return std::get<val.index>(val);
     }
+
+    // constexpr auto operator[] (const K & key) {
+    //     for (constexpr size_t idx = 1; idx < std::tuple_size<decltype(p_map)>::value; ++idx) {
+    //         if (std::get<idx>(p_map).first && *std::get<idx>(p_map).first == key)
+    //             return std::get<idx>(p_map).second;
+    //     }
+    //     return std::get<0>(p_map).second;
+    // }
+
+    // constexpr size_t index_of_key(const K & key) {
+    //     for (size_t idx = 1; idx < std::tuple_size<decltype(p_map)>::value; ++idx) {
+    //         if (std::get<idx>(p_map).first && *std::get<idx>(p_map).first == key)
+    //             return idx;
+    //     }
+
+    //     // TODO: TERMINATE IN CASE IT'S NOT FOUND!
+    // }
 
     constexpr const auto data() const {
         return p_map;
+    }
+
+    constexpr const auto size() const {
+        return std::tuple_size<decltype(p_map)>::value;
     }
 };
 
