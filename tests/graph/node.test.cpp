@@ -178,9 +178,6 @@ TEST(node__out_stream, constructor) {
     out_stream os_node("MyOutStream");
     os_node.subscribe<0>(l.outputs<0>());
 
-    l.outputs<0>().get()->print();
-    std::cout << os_node.inputs<0>() << '\n';
-
     os_node.apply();
 }
 

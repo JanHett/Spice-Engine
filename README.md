@@ -17,6 +17,16 @@ For now, everything is defined in implemented in headers. This might change, but
 
 As long as things are the way they are, though, you can just include the header you want, so even if it isn't pretty, it's convenient.
 
+## Dependencies
+
+The following dependencies have to be installed manually:
+
+- openimageio
+
+Required to run the tests:
+
+- Google Test
+
 ## Data Structures
 
 ### Recipe

@@ -83,6 +83,23 @@ public:
         p_subscribers.erase(sub);
         return true;
     }
+
+    /**
+     * Converts to plain T& by returning the internally held value.
+     * Calling this while the observable does not have a value will dereference
+     * a nullptr.
+     */
+    operator T&() {
+        return *p_value;
+    }
+
+    /**
+     * Converts to plain T* by returning the internal value pointer.
+     * Useful to check if the observable holds a value.
+     */
+    operator T*() {
+        return p_value.get();
+    }
 };
 
 #endif // SPICE_OBSERVABLE

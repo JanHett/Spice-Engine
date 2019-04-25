@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../src/graph/observable.h"
+#include "../../src/reactive/observable.h"
 
 // -------------- //
 //   Observable   //
@@ -104,8 +104,50 @@ TEST(observable, unsubscribe) {
     EXPECT_EQ(false, unsubscribed_again);
 
     // TODO: find a way to see if we really are unsubscribed
-    // - can't check if obs.set() doesn't propagate because memory
+    // - can't check if obs.set() doesn't propagate because memory address
     //   will still be same
     // - can't dereference pointer after reset() and set() because
     //   memory will have been deleted
+}
+
+TEST(observable, operatorTRef) {
+    observable<int> obs;
+
+    obs.set(42);
+
+    int & val = obs;
+    EXPECT_EQ(42, obs.operator int&());
+    EXPECT_TRUE(42 == obs);
+    EXPECT_EQ(42, val);
+    obs.set(47);
+    EXPECT_EQ(47, obs.operator int&());
+    EXPECT_TRUE(47 == obs);
+    EXPECT_EQ(47, val);
+}
+
+TEST(observable, operatorTPtr) {
+    observable<int> obs;
+
+    EXPECT_EQ(nullptr, obs.operator int*());
+    EXPECT_TRUE(nullptr == obs);
+
+    obs.set(42);
+
+    int * val = obs;
+    EXPECT_EQ(42, *obs.operator int*());
+    EXPECT_EQ(val, obs.operator int*());
+    EXPECT_TRUE(42 == *obs);
+    EXPECT_TRUE(val == obs);
+    EXPECT_EQ(42, *val);
+    obs.set(47);
+    EXPECT_EQ(47, *obs.operator int*());
+    EXPECT_EQ(val, obs.operator int*());
+    EXPECT_TRUE(47 == *obs);
+    EXPECT_TRUE(val == obs);
+    EXPECT_EQ(47, *val);
+
+    obs.reset();
+
+    EXPECT_EQ(nullptr, obs.operator int*());
+    EXPECT_TRUE(nullptr == obs);
 }

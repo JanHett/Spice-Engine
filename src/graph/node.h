@@ -8,7 +8,7 @@
 #include "../containers/image.h"
 #include "../containers/pixel.h"
 #include "node_io.h"
-#include "observable.h"
+#include "../reactive/observable.h"
 
 #include "../file_formats/pbm.h"
 
@@ -346,6 +346,7 @@ public:
 
     bool apply()
     {
+        // TODO: make this print to the specified stream
         print_color(*inputs<0>());
         return true;
     }

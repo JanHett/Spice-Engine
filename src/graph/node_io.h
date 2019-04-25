@@ -24,7 +24,6 @@ private:
     void p_connect(output<T> & source) {
         this->source = &source;
         data = source.data;
-        std::cout << "input data is now " << data.lock() << "\n";
         source.subscribe(p_on_data_updated);
     }
 
