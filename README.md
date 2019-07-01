@@ -1,6 +1,8 @@
 # Spice Engine
 An image processor utilising node-based, composable recipes.
 
+> WARNING: This library is deprecated. Have a look at its successor if you are looking for more streamlined code: https://github.com/JanHett/spice.
+
 This project is under heavy development and things will break without warning in regular, short intervals. The code is also not necessarily (or at all) production ready, so do make sure to read and understand all of it before you use it.
 
 Note that this README is not necessarily up-to-date with the current state of the code while the project is in development. At the moment you could call it a reflection of what recent-past-me thought the project would be in the near future.
